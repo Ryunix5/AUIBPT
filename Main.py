@@ -61,7 +61,6 @@ def format_list(rows: List[Dict[str,str]], limit: int = 100) -> str:
 # ---- Prompt (tight + JSON mode by default) ----
 JSON_PROMPT = """
 You are AUIBT, a curriculum assistant. Use ONLY the kb. If insufficient, answer "I don't know."
-
 Return STRICT JSON with exactly:
 {{
   "answer": "final answer",
@@ -175,8 +174,13 @@ def run_chat(csv_path: str, index_dir: str, top_k: int, force_rebuild: bool = Fa
         history += f"\nUser: {q}\nAI: {ans}"
 
 if __name__ == "__main__":
+     # CLI entry-point:
+    #   --rebuild : delete and rebuild the FAISS index from the current CSV
+    #   --k       : override retrieval depth (default from settings.TOP_K)
     parser = argparse.ArgumentParser()
     parser.add_argument("--rebuild", action="store_true", help="Force rebuild FAISS from courses.csv")
     parser.add_argument("--k", type=int, default=TOP_K, help="Retriever top-k (default from config)")
     args = parser.parse_args()
+    
+        # Kick off the chat REPL
     run_chat(CSV_PATH, INDEX_DIR, args.k, force_rebuild=args.rebuild)

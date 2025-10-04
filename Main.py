@@ -84,7 +84,6 @@ Do not include your reasoning.
 
 kb:
 {kb}
-
 history:
 {history}
 

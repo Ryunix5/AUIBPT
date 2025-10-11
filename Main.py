@@ -96,13 +96,6 @@ def make_llm():
         kwargs["format"] = "json"   # keeps outputs clean; no thinking blocks
     return Ollama(**kwargs)
 
-def catalog_intent(q: str):
-    ql = q.lower()
-    if "how many" in ql and "course" in ql:
-        return {"type": "count"}
-    if any(kw in ql for kw in ["list all courses", "show all courses", "list courses", "all courses"]):
-        return {"type": "list", "limit": 100}
-    return None
 
 def run_chat(csv_path: str, index_dir: str, top_k: int, force_rebuild: bool = False):
     # 1) Load CSV rows and convert to docs

@@ -125,7 +125,7 @@ def run_chat(csv_path: str, index_dir: str, top_k: int, force_rebuild: bool = Fa
             break
 
         # Intent short-circuit (count/list) uses CSV directly
-        intent = catalog_intent(q)
+        intent = parse_catalog_intent(q)
         if intent:
             if intent["type"] == "count":
                 msg = f"I currently know {len(rows)} courses from courses.csv."

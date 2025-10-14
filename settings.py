@@ -1,5 +1,5 @@
 MODEL_NAME = "llama3.1:8b"
-CSV_PATH = r"C:\Users\themi\Desktop\Uni projects\Software engineer project\Data set\Curriculums\CS\course.csv"
+CSV_PATH = r"C:\Users\themi\Documents\Projects\chatbot\courses.csv"
 INDEX_DIR = "vs_courses"      # FAISS index
 TOP_K = 3                # retrieval depth
 

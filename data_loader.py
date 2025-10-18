@@ -2,7 +2,9 @@
 import csv
 import re
 from typing import List, Dict, Tuple, Optional
-from langchain.docstore.document import Document  # <= stable across LC versions
+
+# ✅ LC ≥0.2: Document lives in langchain_core
+from langchain_core.documents import Document
 
 # CSV schema (case-insensitive, BOM-safe). Required: code, title, description.
 # Preferred/optional: college, credits, prereqs.
@@ -49,7 +51,7 @@ def _resolve_headers(fieldnames: List[str]) -> Tuple[Optional[str], str, str, st
                 return m[c]
         return None
 
-    h_college = pick(_COLLEGE_KEYS)         # optional
+    h_college = pick(_COLLEGE_KEYS)         # optional (but recommended)
     h_code    = pick(_CODE_KEYS)            # required
     h_title   = pick(_TITLE_KEYS)           # required
     h_desc    = pick(_DESC_KEYS)            # required
@@ -63,7 +65,7 @@ def _resolve_headers(fieldnames: List[str]) -> Tuple[Optional[str], str, str, st
 
 def _normalize_code(code: str) -> str:
     """CSC-101 -> CSC101; trim spaces; uppercase."""
-    return re.sub(r"[\s\-]+", "", (code or "")).upper().strip()
+    return re.sub(r"[\s\-]+", "", (code or "").upper()).strip()
 
 def _normalize_college(college: str) -> str:
     """Normalize common college tags to short forms (e.g., CAS/COP/COD)."""
@@ -75,9 +77,9 @@ def _normalize_college(college: str) -> str:
         return c.upper()
     if "pharm" in c_low: return "COP"
     if "dent"  in c_low: return "COD"
-    if "art" in c_low or "science" in c_low: return "CAS"
+    if "art"   in c_low or "science" in c_low: return "CAS"
     if "business" in c_low or "econ" in c_low: return "COB"
-    if "nurs" in c_low or "health" in c_low: return "CON"
+    if "nurs" in c_low or "health" in c_low:   return "CON"
     return c.upper()
 
 def load_catalog_rows(csv_path: str) -> List[Dict[str, str]]:
@@ -85,6 +87,7 @@ def load_catalog_rows(csv_path: str) -> List[Dict[str, str]]:
     Load rows from CSV.
     - Required: code, title, description
     - Optional: college, credits, prereqs
+    - BOM/encoding safe; header names case-insensitive and tolerant to variants.
     """
     f, rdr = _open_csv_any_encoding(csv_path)
     try:
@@ -115,7 +118,7 @@ def load_catalog_rows(csv_path: str) -> List[Dict[str, str]]:
         f.close()
 
 def rows_to_documents(rows: List[Dict[str, str]]) -> List[Document]:
-    """Convert catalog rows to LangChain Documents."""
+    """Convert catalog rows to LangChain Documents (for vector indexing)."""
     docs: List[Document] = []
     for r in rows:
         text = (
@@ -128,6 +131,11 @@ def rows_to_documents(rows: List[Dict[str, str]]) -> List[Document]:
         )
         docs.append(Document(
             page_content=text,
-            metadata={"source": "courses.csv", "code": r.get("code",""), "college": r.get("college",""), "title": r.get("title","")}
+            metadata={
+                "source": "courses.csv",
+                "code": r.get("code",""),
+                "college": r.get("college",""),
+                "title": r.get("title",""),
+            }
         ))
     return docs

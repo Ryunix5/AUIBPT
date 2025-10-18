@@ -505,6 +505,11 @@ def prepare_kb_from_docs(docs) -> str:
 
 # ---------------------- LLM & STREAMING ----------------------
 class StreamHandler(BaseCallbackHandler):
+    try:
+        from langchain.callbacks.base import BaseCallbackHandler
+    except Exception:
+        from langchain_core.callbacks import BaseCallbackHandler
+
     def __init__(self, placeholder): self.placeholder = placeholder; self.text = ""
     def on_llm_new_token(self, token, **_): self.text += token; self.placeholder.markdown(self.text)
 

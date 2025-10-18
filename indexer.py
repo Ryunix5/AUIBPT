@@ -2,10 +2,17 @@
 import os
 import shutil
 from typing import List
+
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
+
+# ✅ Handle both old/new locations for the text splitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter  # new package
+except ModuleNotFoundError:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter   # older langchain
+
+from langchain.docstore.document import Document  # still OK for FAISS metadata typing
 
 _EMBED = None
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"

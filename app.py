@@ -48,6 +48,30 @@ OPENAI_KEY = _get_openai_key()
 if OPENAI_KEY:
     os.environ["OPENAI_API_KEY"] = OPENAI_KEY  # for SDKs that read from env
 
+# --- Safe secrets/env access (works locally + Streamlit Cloud) ---
+def _get_secret(key: str) -> str | None:
+    val = os.getenv(key)
+    if val:
+        return val
+    try:
+        return st.secrets[key]  # may raise if secrets.toml is absent
+    except Exception:
+        return None
+
+OPENAI_KEY = _get_secret("OPENAI_API_KEY")
+GROQ_KEY   = _get_secret("GROQ_API_KEY")  # ← add this in Streamlit Secrets when you can
+
+if OPENAI_KEY:
+    os.environ["OPENAI_API_KEY"] = OPENAI_KEY
+if GROQ_KEY:
+    os.environ["GROQ_API_KEY"] = GROQ_KEY
+
+# Optional import for catching OpenAI rate limits
+try:
+    import openai
+    OpenAIRateLimitError = openai.RateLimitError
+except Exception:
+    class OpenAIRateLimitError(Exception): ...
 
 # ---------------------- UI CONFIG ----------------------
 page_icon = "RP.png" if os.path.exists("RP.png") else "🎓"
@@ -505,39 +529,91 @@ def prepare_kb_from_docs(docs) -> str:
 
 # ---------------------- LLM & STREAMING ----------------------
 class StreamHandler(BaseCallbackHandler):
-    try:
-        from langchain.callbacks.base import BaseCallbackHandler
-    except Exception:
-        from langchain_core.callbacks import BaseCallbackHandler
-
+    
     def __init__(self, placeholder): self.placeholder = placeholder; self.text = ""
     def on_llm_new_token(self, token, **_): self.text += token; self.placeholder.markdown(self.text)
 
+def _make_openai_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
+    from langchain_openai import ChatOpenAI
+    return ChatOpenAI(
+        model=model_name,
+        temperature=temperature,
+        max_tokens=num_predict,
+        streaming=True,
+        callbacks=callbacks or [],
+        max_retries=8,
+        timeout=60.0,
+    )
+
+def _make_groq_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
+    # Recommended fast Groq models: "llama-3.1-8b-instant" or "llama3-8b-8192"
+    from langchain_groq import ChatGroq
+    return ChatGroq(
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=num_predict,
+        streaming=True,
+        callbacks=callbacks or [],
+        max_retries=8,
+        timeout=60.0,
+    )
+
+def _make_ollama_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
+    from langchain_ollama import OllamaLLM
+    return OllamaLLM(
+        model=model_name,
+        temperature=temperature,
+        num_predict=num_predict,
+        stop=["</final>"],
+        callbacks=callbacks or [],
+    )
+
 def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    """OpenAI-first with streaming; Ollama fallback for local dev (no key)."""
+    """
+    Provider order:
+      1) OpenAI (if key present and USE_OPENAI is True)
+      2) Groq (if key present)
+      3) Ollama (local dev fallback)
+    """
     effective_use_openai = bool(OPENAI_KEY) and USE_OPENAI
     if effective_use_openai:
+        try:
+            return _make_openai_llm(model_name, temperature, num_predict, callbacks)
+        except Exception as e:
+            # Fall through to Groq if OpenAI init fails for any reason
+            st.warning(f"OpenAI init failed: {e}. Falling back to Groq (if configured).")
+
+    if GROQ_KEY:
+        try:
+            # sensible default Groq model if you passed an OpenAI name
+            groq_model = model_name
+            if "gpt-" in model_name.lower():
+                groq_model = "llama-3.1-8b-instant"
+            return _make_groq_llm(groq_model, temperature, num_predict, callbacks)
+        except Exception as e:
+            st.warning(f"Groq init failed: {e}. Falling back to Ollama (if installed).")
+
+    # Last resort: local Ollama
+    try:
+        return _make_ollama_llm(model_name, temperature, num_predict, callbacks)
+    except Exception:
+        # Final fallback: tiny OpenAI if nothing else works (will still error if no key)
         from langchain_openai import ChatOpenAI
+        st.warning("No Groq key and Ollama not available. Using OpenAI mini as last resort.")
         return ChatOpenAI(
-            model=model_name,
+            model="gpt-4o-mini",
             temperature=temperature,
             max_tokens=num_predict,
             streaming=True,
-            callbacks=callbacks or []
-        )
-    else:
-        # local fallback so devs without a key can still run the app
-        from langchain_ollama import OllamaLLM  # lazy import to avoid Cloud issues
-        return OllamaLLM(
-            model=model_name,
-            temperature=temperature,
-            num_predict=num_predict,
-            stop=["</final>"],
-            callbacks=callbacks or []
+            callbacks=callbacks or [],
+            max_retries=8,
+            timeout=60.0,
         )
 
 
-def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, student_context: str, placeholder, univ_kb: str = "") -> str:
+
+def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, student_context: str, placeholder, univ_kb: str = "", groq_fallback_chain=None) -> str:
+    """Stream tokens. On OpenAI rate limit or API errors, fall back to Groq if available."""
     handler = StreamHandler(placeholder)
     payload = {
         "kb": kb,
@@ -547,17 +623,58 @@ def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, 
         "answer_lang": answer_lang,
         "student_context": student_context
     }
+
+    def _invoke(c, stream=True):
+        if stream:
+            return c.invoke(payload, config={"callbacks": [handler]})
+        else:
+            return c.invoke(payload)
+
+    # 1) Primary attempt (stream)
     try:
-        raw = chain.invoke(payload, config={"callbacks": [handler]})
+        raw = _invoke(chain, stream=True)
         final_text = _clean_output(_to_str(raw).strip())
         placeholder.markdown(final_text)
         return final_text
+    except OpenAIRateLimitError as e:
+        # Switch to Groq immediately if available
+        if groq_fallback_chain is not None:
+            st.info("⚡ Switching to Groq due to OpenAI rate limit.")
+            try:
+                raw = _invoke(groq_fallback_chain, stream=True)
+                final_text = _clean_output(_to_str(raw).strip())
+                placeholder.markdown(final_text)
+                return final_text
+            except Exception as ee:
+                last_err = ee
+        else:
+            last_err = e
     except Exception as e:
-        log.error(f"Streaming failed, fallback to non-streamed invoke: {e}")
-        raw = chain.invoke(payload)
-        final_text = _clean_output(_to_str(raw).strip())
-        placeholder.markdown(final_text)
-        return final_text
+        # Try non-streaming once with primary
+        try:
+            raw = _invoke(chain, stream=False)
+            final_text = _clean_output(_to_str(raw).strip())
+            placeholder.markdown(final_text)
+            return final_text
+        except Exception as ee:
+            last_err = ee
+
+    # 2) If we got here and have Groq, try non-streaming Groq once
+    if groq_fallback_chain is not None:
+        try:
+            raw = _invoke(groq_fallback_chain, stream=False)
+            final_text = _clean_output(_to_str(raw).strip())
+            placeholder.markdown(final_text)
+            return final_text
+        except Exception as ee:
+            last_err = ee
+
+    # 3) Graceful failure
+    log.error(f"LLM failure (after Groq fallback if any): {last_err}")
+    msg = "We’re a bit busy right now. Please try again in ~30–60s."
+    placeholder.warning(msg)
+    return msg
+
 
 # ---------------------- SPLASH ----------------------
 def show_splash():
@@ -733,9 +850,25 @@ except Exception as e:
     st.stop()
 
 llm = make_llm(MODEL_NAME, TEMPERATURE, NUM_PREDICT)
+
+# Primary chains
 course_chain = ChatPromptTemplate.from_template(COURSE_PROMPT) | llm
 chat_chain   = ChatPromptTemplate.from_template(CHAT_PROMPT)   | llm
 univ_chain   = ChatPromptTemplate.from_template(UNIV_PROMPT)   | llm
+
+# Optional Groq fallback chains (used iff GROQ_KEY is present)
+groq_fallback_course = None
+groq_fallback_chat   = None
+groq_fallback_univ   = None
+if GROQ_KEY:
+    try:
+        groq_llm = _make_groq_llm("llama-3.1-8b-instant", TEMPERATURE, NUM_PREDICT)
+        groq_fallback_course = ChatPromptTemplate.from_template(COURSE_PROMPT) | groq_llm
+        groq_fallback_chat   = ChatPromptTemplate.from_template(CHAT_PROMPT)   | groq_llm
+        groq_fallback_univ   = ChatPromptTemplate.from_template(UNIV_PROMPT)   | groq_llm
+    except Exception as e:
+        st.warning(f"Groq fallback unavailable: {e}")
+
 
 # ---------------------- LIBERAL ARTS (rules) ----------------------
 LA_REQUIREMENTS = {

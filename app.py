@@ -568,36 +568,69 @@ def _make_ollama_llm(model_name: str, temperature: float, num_predict: int, call
         callbacks=callbacks or [],
     )
 
+# === Provider factories ===
+def _make_openai_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
+    from langchain_openai import ChatOpenAI
+    return ChatOpenAI(
+        model=model_name,
+        temperature=temperature,
+        max_tokens=num_predict,
+        streaming=True,
+        callbacks=callbacks or [],
+        max_retries=8,
+        timeout=60.0,
+    )
+
+def _make_groq_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
+    # Good default: "llama-3.1-8b-instant"
+    from langchain_groq import ChatGroq
+    return ChatGroq(
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=num_predict,
+        streaming=True,
+        callbacks=callbacks or [],
+        max_retries=8,
+        timeout=60.0,
+    )
+
+def _make_ollama_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
+    from langchain_ollama import OllamaLLM
+    return OllamaLLM(
+        model=model_name,
+        temperature=temperature,
+        num_predict=num_predict,
+        stop=["</final>"],
+        callbacks=callbacks or [],
+    )
+
 def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
     """
-    Provider order:
-      1) OpenAI (if key present and USE_OPENAI is True)
+    Priority:
+      1) OpenAI (if key present and USE_OPENAI True)
       2) Groq (if key present)
-      3) Ollama (local dev fallback)
+      3) Ollama (local)
     """
     effective_use_openai = bool(OPENAI_KEY) and USE_OPENAI
     if effective_use_openai:
         try:
             return _make_openai_llm(model_name, temperature, num_predict, callbacks)
         except Exception as e:
-            # Fall through to Groq if OpenAI init fails for any reason
-            st.warning(f"OpenAI init failed: {e}. Falling back to Groq (if configured).")
+            st.warning(f"OpenAI init failed: {e}. Trying Groq…")
 
     if GROQ_KEY:
         try:
-            # sensible default Groq model if you passed an OpenAI name
             groq_model = model_name
             if "gpt-" in model_name.lower():
                 groq_model = "llama-3.1-8b-instant"
             return _make_groq_llm(groq_model, temperature, num_predict, callbacks)
         except Exception as e:
-            st.warning(f"Groq init failed: {e}. Falling back to Ollama (if installed).")
+            st.warning(f"Groq init failed: {e}. Trying Ollama…")
 
-    # Last resort: local Ollama
     try:
         return _make_ollama_llm(model_name, temperature, num_predict, callbacks)
     except Exception:
-        # Final fallback: tiny OpenAI if nothing else works (will still error if no key)
+        # final safety net
         from langchain_openai import ChatOpenAI
         st.warning("No Groq key and Ollama not available. Using OpenAI mini as last resort.")
         return ChatOpenAI(
@@ -609,6 +642,7 @@ def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=No
             max_retries=8,
             timeout=60.0,
         )
+
 
 
 
@@ -855,6 +889,18 @@ llm = make_llm(MODEL_NAME, TEMPERATURE, NUM_PREDICT)
 course_chain = ChatPromptTemplate.from_template(COURSE_PROMPT) | llm
 chat_chain   = ChatPromptTemplate.from_template(CHAT_PROMPT)   | llm
 univ_chain   = ChatPromptTemplate.from_template(UNIV_PROMPT)   | llm
+
+# Optional Groq fallback chains
+groq_fallback_course = groq_fallback_chat = groq_fallback_univ = None
+if GROQ_KEY:
+    try:
+        groq_llm = _make_groq_llm("llama-3.1-8b-instant", TEMPERATURE, NUM_PREDICT)
+        groq_fallback_course = ChatPromptTemplate.from_template(COURSE_PROMPT) | groq_llm
+        groq_fallback_chat   = ChatPromptTemplate.from_template(CHAT_PROMPT)   | groq_llm
+        groq_fallback_univ   = ChatPromptTemplate.from_template(UNIV_PROMPT)   | groq_llm
+    except Exception as e:
+        st.warning(f"Groq fallback unavailable: {e}")
+
 
 # Optional Groq fallback chains (used iff GROQ_KEY is present)
 groq_fallback_course = None
@@ -1368,15 +1414,17 @@ else:
         if is_university_query(q):
             univ_kb_text = univ_kb_blocks_for(q) or "University facts: (none)\nFaculty: (none)"
             ans = ask_llm_stream(
-                univ_chain,
-                kb="",  # not used here
-                history_text=history_text,
-                q=q,
-                answer_lang=answer_lang_str,
-                student_context=student_context,
-                placeholder=ans_placeholder,
-                univ_kb=univ_kb_text,
-            )
+    univ_chain,
+    kb="",
+    history_text=history_text,
+    q=q,
+    answer_lang=answer_lang_str,
+    student_context=student_context,
+    placeholder=ans_placeholder,
+    univ_kb=univ_kb_text,
+    groq_fallback_chain=groq_fallback_univ,
+)
+
 
         elif direct_rows:
             if college_filter != "All":
@@ -1386,13 +1434,21 @@ else:
             kb = rows_to_kb(direct_rows)
             if st.session_state.completed_codes_all:
                 kb += "\n---\n" + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
-            ans = ask_llm_stream(course_chain, kb, history_text, q, answer_lang_str, student_context, ans_placeholder)
+            ans = ask_llm_stream(
+    course_chain, kb, history_text, q, answer_lang_str, student_context,
+    ans_placeholder, groq_fallback_chain=groq_fallback_course
+)
+
 
         elif title_rows:
             kb = rows_to_kb(title_rows)
             if st.session_state.completed_codes_all:
                 kb += "\n---\n" + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
-            ans = ask_llm_stream(course_chain, kb, history_text, q, answer_lang_str, student_context, ans_placeholder)
+            ans = ask_llm_stream(
+    course_chain, kb, history_text, q, answer_lang_str, student_context,
+    ans_placeholder, groq_fallback_chain=groq_fallback_course
+)
+
 
         elif intent:
             if intent["type"] == "count":
@@ -1433,7 +1489,11 @@ else:
                 else:
                     ans_placeholder.markdown("I don't know from the provided data."); ans = "I don't know from the provided data."
             else:
-                ans = ask_llm_stream(chat_chain, "", history_text, q, answer_lang_str, student_context, ans_placeholder)
+                ans = ask_llm_stream(
+    chat_chain, "", history_text, q, answer_lang_str, student_context,
+    ans_placeholder, groq_fallback_chain=groq_fallback_chat
+)
+
                 if st.session_state.get("user_name") and ans and not ans.lower().startswith(st.session_state["user_name"].lower()):
                     prefixed = friendly_prefix() + ans
                     ans_placeholder.markdown(prefixed); ans = prefixed

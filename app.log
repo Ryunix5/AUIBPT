@@ -86,3 +86,7 @@
 2025-10-18 22:06:09,263 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
 2025-10-18 22:06:20,215 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
 2025-10-18 22:06:39,035 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 23:07:16,181 [INFO] Use pytorch device_name: cpu
+2025-10-18 23:07:16,182 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 23:07:19,714 [INFO] Loading faiss with AVX2 support.
+2025-10-18 23:07:19,898 [INFO] Successfully loaded faiss with AVX2 support.

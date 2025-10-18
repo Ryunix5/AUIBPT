@@ -2,7 +2,7 @@
 import csv
 import re
 from typing import List, Dict, Tuple, Optional
-from langchain.schema import Document
+from langchain.docstore.document import Document  # <= stable across LC versions
 
 # CSV schema (case-insensitive, BOM-safe). Required: code, title, description.
 # Preferred/optional: college, credits, prereqs.
@@ -49,7 +49,7 @@ def _resolve_headers(fieldnames: List[str]) -> Tuple[Optional[str], str, str, st
                 return m[c]
         return None
 
-    h_college = pick(_COLLEGE_KEYS)         # optional (but recommended)
+    h_college = pick(_COLLEGE_KEYS)         # optional
     h_code    = pick(_CODE_KEYS)            # required
     h_title   = pick(_TITLE_KEYS)           # required
     h_desc    = pick(_DESC_KEYS)            # required
@@ -71,20 +71,13 @@ def _normalize_college(college: str) -> str:
     if not c:
         return ""
     c_low = c.lower()
-    # accept already-short tags as-is
     if c.upper() in {"CAS", "COP", "COD", "COB", "CON"}:
         return c.upper()
-    # light mapping by keywords
-    if "pharm" in c_low:
-        return "COP"
-    if "dent" in c_low:
-        return "COD"
-    if "art" in c_low or "science" in c_low:
-        return "CAS"
-    if "business" in c_low or "econ" in c_low:
-        return "COB"
-    if "nurs" in c_low or "health" in c_low:
-        return "CON"
+    if "pharm" in c_low: return "COP"
+    if "dent"  in c_low: return "COD"
+    if "art" in c_low or "science" in c_low: return "CAS"
+    if "business" in c_low or "econ" in c_low: return "COB"
+    if "nurs" in c_low or "health" in c_low: return "CON"
     return c.upper()
 
 def load_catalog_rows(csv_path: str) -> List[Dict[str, str]]:
@@ -92,14 +85,12 @@ def load_catalog_rows(csv_path: str) -> List[Dict[str, str]]:
     Load rows from CSV.
     - Required: code, title, description
     - Optional: college, credits, prereqs
-    - BOM/encoding safe; header names case-insensitive and tolerant to variants.
     """
     f, rdr = _open_csv_any_encoding(csv_path)
     try:
         h_college, h_code, h_title, h_desc, h_cred, h_prer = _resolve_headers(rdr.fieldnames or [])
         rows: List[Dict[str, str]] = []
         for r in rdr:
-            # Strip any BOM from keys defensively
             r = { _strip_bom(k): v for k, v in r.items() }
             college = _normalize_college((r.get(h_college, "") if h_college else "").strip())
             code    = _normalize_code(r.get(h_code, ""))
@@ -124,10 +115,7 @@ def load_catalog_rows(csv_path: str) -> List[Dict[str, str]]:
         f.close()
 
 def rows_to_documents(rows: List[Dict[str, str]]) -> List[Document]:
-    """
-    Convert catalog rows to LangChain Documents.
-    Include college/credits/prereqs in page_content and metadata for better retrieval.
-    """
+    """Convert catalog rows to LangChain Documents."""
     docs: List[Document] = []
     for r in rows:
         text = (
@@ -140,11 +128,6 @@ def rows_to_documents(rows: List[Dict[str, str]]) -> List[Document]:
         )
         docs.append(Document(
             page_content=text,
-            metadata={
-                "source": "courses.csv",
-                "code": r.get("code",""),
-                "college": r.get("college",""),
-                "title": r.get("title",""),
-            }
+            metadata={"source": "courses.csv", "code": r.get("code",""), "college": r.get("college",""), "title": r.get("title","")}
         ))
     return docs

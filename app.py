@@ -7,8 +7,9 @@
 # - Picker persists selections across filter changes (Major / LA / Both)
 # - Export schedule (CSV) + Save/Load (JSON)
 # - Student profile context — user “Completed Courses” feed the chat answers
-# - NEW: Institutional KB (AUIB + CAS/COP/COD + faculty) with dedicated prompt & routing
-# - NEW: Profile picture avatar + GUI color customizer
+# - Institutional KB (AUIB + CAS/COP/COD + faculty) with dedicated prompt & routing
+# - Profile picture avatar + GUI color customizer
+# - OpenAI-first LLM (Streamlit Cloud ready) with Ollama fallback for local
 
 from __future__ import annotations
 
@@ -24,13 +25,29 @@ import importlib.util
 from typing import List, Dict, Tuple, Optional, Set
 
 import streamlit as st
-from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks import BaseCallbackHandler  # fixed import (no langchain.callbacks)
 
-from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT
+from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT, USE_OPENAI
 from data_loader import load_catalog_rows, rows_to_documents
 from indexer import ensure_index, load_index, rebuild_index
+
+# --- OpenAI key resolution (safe locally + Streamlit Cloud) ---
+def _get_openai_key() -> str | None:
+    # 1) environment variable
+    key = os.getenv("OPENAI_API_KEY")
+    if key:
+        return key
+    # 2) Streamlit Cloud / local secrets.toml (optional)
+    try:
+        return st.secrets["OPENAI_API_KEY"]  # will raise if secrets missing
+    except Exception:
+        return None
+
+OPENAI_KEY = _get_openai_key()
+if OPENAI_KEY:
+    os.environ["OPENAI_API_KEY"] = OPENAI_KEY  # for SDKs that read from env
+
 
 # ---------------------- UI CONFIG ----------------------
 page_icon = "RP.png" if os.path.exists("RP.png") else "🎓"
@@ -155,7 +172,6 @@ def univ_kb_blocks_for(q: str, limit: int = 24) -> str:
     for f in fac:
         blob = " ".join([f.get("name",""), f.get("title",""), f.get("areas",""), f.get("prior",""), f.get("college","")]).lower()
         score = 0
-        # simple overlap
         A = set(re.sub(r"[^\w\s]", " ", ql).split())
         B = set(re.sub(r"[^\w\s]", " ", blob).split())
         score = len(A & B)
@@ -493,7 +509,28 @@ class StreamHandler(BaseCallbackHandler):
     def on_llm_new_token(self, token, **_): self.text += token; self.placeholder.markdown(self.text)
 
 def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    return OllamaLLM(model=model_name, temperature=temperature, num_predict=num_predict, stop=["</final>"], callbacks=callbacks or [])
+    """OpenAI-first with streaming; Ollama fallback for local dev (no key)."""
+    effective_use_openai = bool(OPENAI_KEY) and USE_OPENAI
+    if effective_use_openai:
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=model_name,
+            temperature=temperature,
+            max_tokens=num_predict,
+            streaming=True,
+            callbacks=callbacks or []
+        )
+    else:
+        # local fallback so devs without a key can still run the app
+        from langchain_ollama import OllamaLLM  # lazy import to avoid Cloud issues
+        return OllamaLLM(
+            model=model_name,
+            temperature=temperature,
+            num_predict=num_predict,
+            stop=["</final>"],
+            callbacks=callbacks or []
+        )
+
 
 def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, student_context: str, placeholder, univ_kb: str = "") -> str:
     handler = StreamHandler(placeholder)
@@ -566,7 +603,7 @@ with st.sidebar:
     st.caption("System-managed settings shown for reference.")
     answer_lang = st.selectbox("Answer language", list({"English","Arabic"}), index=0)
     college_filter = st.selectbox("College filter", sorted(KNOWN_COLLEGES), index=0)
-    st.text_input("Ollama model", value=MODEL_NAME, disabled=True)
+    st.text_input("Model", value=MODEL_NAME, disabled=True)
     col_a, col_b = st.columns(2)
     with col_a:
         st.number_input("Retriever k", 1, 10, value=int(TOP_K), step=1, disabled=True)
@@ -579,15 +616,14 @@ with st.sidebar:
     st.divider()
     st.markdown("## 🎨 Appearance")
 
-    # Session defaults for theme and avatar
     if "profile_avatar_path" not in st.session_state:
         st.session_state.profile_avatar_path = None
     if "theme_primary" not in st.session_state:
-        st.session_state.theme_primary = "#4f46e5"  # indigo
+        st.session_state.theme_primary = "#4f46e5"
     if "theme_bg" not in st.session_state:
-        st.session_state.theme_bg = "#0b1220"       # deep navy
+        st.session_state.theme_bg = "#0b1220"
     if "theme_text" not in st.session_state:
-        st.session_state.theme_text = "#e2e8f0"     # slate-200
+        st.session_state.theme_text = "#e2e8f0"
 
     c1, c2, c3 = st.columns(3)
     with c1:

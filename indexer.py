@@ -6,17 +6,18 @@ from typing import List
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
-# ✅ Handle both old/new locations for the text splitter
+# Handle both old/new locations for the text splitter
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter  # new package
 except ModuleNotFoundError:
     from langchain.text_splitter import RecursiveCharacterTextSplitter   # older langchain
 
-from langchain.docstore.document import Document  # still OK for FAISS metadata typing
+# ✅ LC ≥0.2: Document lives here
+from langchain_core.documents import Document
 
 _EMBED = None
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-META_FILE = "index_meta.txt"
+META_FILE = "index_meta.txt"  # store embedding model name to detect mismatch
 
 def _embeddings():
     global _EMBED
@@ -39,6 +40,7 @@ def _read_meta(persist_dir: str) -> str | None:
         return None
 
 def build_index(docs: List[Document], persist_dir: str) -> None:
+    """Create FAISS from docs and save to disk."""
     splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=80)
     chunks = splitter.split_documents(docs)
     vs = FAISS.from_documents(chunks, _embeddings())
@@ -46,17 +48,21 @@ def build_index(docs: List[Document], persist_dir: str) -> None:
     _write_meta(persist_dir)
 
 def load_index(persist_dir: str) -> FAISS:
+    """Load an existing FAISS index from disk; auto-rebuild if model meta mismatches."""
     meta = _read_meta(persist_dir)
     if meta and meta != EMBED_MODEL:
+        # embedding changed → force rebuild by caller
         raise RuntimeError(f"Embedding mismatch: index has '{meta}', code expects '{EMBED_MODEL}'")
     return FAISS.load_local(persist_dir, _embeddings(), allow_dangerous_deserialization=True)
 
 def ensure_index(docs: List[Document], persist_dir: str) -> None:
+    """Build the index only if it doesn't exist; rebuild if corrupt."""
     if not os.path.isdir(persist_dir):
         print("No index found — building it from courses.csv ...")
         build_index(docs, persist_dir)
         print("Index built ✔")
         return
+    # check meta; if missing or mismatch, rebuild
     try:
         meta = _read_meta(persist_dir)
         if (meta is not None) and (meta != EMBED_MODEL):
@@ -65,6 +71,7 @@ def ensure_index(docs: List[Document], persist_dir: str) -> None:
             build_index(docs, persist_dir)
             print("Index rebuilt ✔")
         else:
+            # try a load to validate
             _ = FAISS.load_local(persist_dir, _embeddings(), allow_dangerous_deserialization=True)
             print("Index found ✔")
     except Exception:
@@ -74,6 +81,7 @@ def ensure_index(docs: List[Document], persist_dir: str) -> None:
         print("Index rebuilt ✔")
 
 def rebuild_index(docs: List[Document], persist_dir: str) -> None:
+    """Force a fresh rebuild (handy during edits)."""
     if os.path.isdir(persist_dir):
         shutil.rmtree(persist_dir, ignore_errors=True)
     build_index(docs, persist_dir)

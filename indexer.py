@@ -1,19 +1,22 @@
 # indexer.py
 import os
 import shutil
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
-# Handle both old/new locations for the text splitter
+# Prefer new splitters package; fall back to old location if needed
 try:
-    from langchain_text_splitters import RecursiveCharacterTextSplitter  # new package
+    from langchain_text_splitters import RecursiveCharacterTextSplitter  # LC ≥0.2 split package
 except ModuleNotFoundError:
-    from langchain.text_splitter import RecursiveCharacterTextSplitter   # older langchain
+    from langchain.text_splitter import RecursiveCharacterTextSplitter   # older LC
 
-# ✅ LC ≥0.2: Document lives here
-from langchain_core.documents import Document
+# 👉 Import Document only for type checking (no runtime dependency on its location)
+if TYPE_CHECKING:
+    from langchain_core.documents import Document  # LC ≥0.2
+else:
+    Document = object  # sentinel for type hints without importing at runtime
 
 _EMBED = None
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -51,7 +54,6 @@ def load_index(persist_dir: str) -> FAISS:
     """Load an existing FAISS index from disk; auto-rebuild if model meta mismatches."""
     meta = _read_meta(persist_dir)
     if meta and meta != EMBED_MODEL:
-        # embedding changed → force rebuild by caller
         raise RuntimeError(f"Embedding mismatch: index has '{meta}', code expects '{EMBED_MODEL}'")
     return FAISS.load_local(persist_dir, _embeddings(), allow_dangerous_deserialization=True)
 
@@ -62,7 +64,6 @@ def ensure_index(docs: List[Document], persist_dir: str) -> None:
         build_index(docs, persist_dir)
         print("Index built ✔")
         return
-    # check meta; if missing or mismatch, rebuild
     try:
         meta = _read_meta(persist_dir)
         if (meta is not None) and (meta != EMBED_MODEL):
@@ -71,7 +72,6 @@ def ensure_index(docs: List[Document], persist_dir: str) -> None:
             build_index(docs, persist_dir)
             print("Index rebuilt ✔")
         else:
-            # try a load to validate
             _ = FAISS.load_local(persist_dir, _embeddings(), allow_dangerous_deserialization=True)
             print("Index found ✔")
     except Exception:

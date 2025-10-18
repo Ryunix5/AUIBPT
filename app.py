@@ -1145,7 +1145,14 @@ def import_schedule_json(payload_bytes):
             if "code" in r and "title" in r:
                 cand_rows.append({"code":r["code"],"title":r["title"],"credits":r.get("credits"),"prereqs":r.get("prereqs")})
         if cand_rows:
-            new_slots.append({"id": f"import-{len(new_slots)}", "origin": s["origin"], "candidates": cand_rows, "current_idx": int(s["current_idx"])})
+            new_slots.append({
+    "id": f"import-{len(new_slots)}",
+    "origin": s["origin"],
+    "candidates": cand_rows,
+    "current_idx": int(s["current_idx"]),
+    "locked": bool(s.get("locked", False)),   # ✅ default lock state
+})
+
     return new_slots
 
 def _auto_top_up(major_key: str, target_credits: int, taken_codes: Set[str], slots: List[Dict], rows_all: List[Dict]) -> None:
@@ -1162,7 +1169,14 @@ def _auto_top_up(major_key: str, target_credits: int, taken_codes: Set[str], slo
         for r in cand_list:
             cr = _credits_from_str(r.get("credits"))
             if current_total + cr <= target_credits:
-                slots.append({"id": f"extra-{origin}-{len(slots)}", "origin": origin, "candidates": [r], "current_idx": 0})
+                slots.append({
+    "id": f"extra-{origin}-{len(slots)}",
+    "origin": origin,
+    "candidates": [r],
+    "current_idx": 0,
+    "locked": False,          # ✅ initialize here too
+})
+
                 used.add(r["code"].upper())
                 current_total += cr
                 if current_total >= target_credits:
@@ -1272,7 +1286,14 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
                 if cu not in seen_codes and cu not in used:
                     candidates.append(r); seen_codes.add(cu)
 
-            slots.append({"id": f"{origin}-{idx}", "origin": origin, "candidates": candidates, "current_idx": 0})
+            slots.append({
+    "id": f"{origin}-{idx}",
+    "origin": origin,
+    "candidates": candidates,
+    "current_idx": 0,
+    "locked": False,          # ✅ initialize lock state
+})
+
             used.add(c["code"].upper())
 
         st.session_state.schedule_slots = slots
@@ -1319,7 +1340,13 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
                 st.caption("Why this? " + " • ".join(why_bits))
 
             with cols[1]:
-                if st.button("❌ swap", help="Replace with the next eligible option", key=f"swap_{slot['id']}", disabled=slot.get("locked")):
+                if st.button(
+    "❌ swap",
+    help="Replace with the next eligible option",
+    key=f"swap_{slot['id']}",
+    disabled=bool(slot.get("locked", False)),     # ✅ ensure a real bool
+):
+
                     current_used = {c["candidates"][c["current_idx"]]["code"].upper() for c in st.session_state.schedule_slots}
                     current_used.discard(cur["code"].upper())
 

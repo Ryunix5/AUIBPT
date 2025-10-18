@@ -1,0 +1,88 @@
+2025-10-18 12:51:52,497 [INFO] Use pytorch device_name: cpu
+2025-10-18 12:51:52,497 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 12:51:56,804 [INFO] Loading faiss with AVX2 support.
+2025-10-18 12:51:57,130 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 12:52:48,859 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:02:28,575 [WARNING] Primary loader failed: CSV file is missing required columns: {'title', 'code', 'description'}; attempting fallback header mapping.
+2025-10-18 14:10:38,428 [INFO] Use pytorch device_name: cpu
+2025-10-18 14:10:38,428 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 14:10:41,831 [INFO] Loading faiss with AVX2 support.
+2025-10-18 14:10:42,085 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 14:11:04,536 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:11:33,386 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:11:51,165 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:11:58,595 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:30:32,810 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:30:39,739 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:30:46,297 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:30:58,350 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:31:05,173 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:31:11,103 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:31:17,347 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:31:20,692 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:44:51,383 [INFO] Use pytorch device_name: cpu
+2025-10-18 14:44:51,384 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 14:44:55,571 [INFO] Loading faiss with AVX2 support.
+2025-10-18 14:44:55,654 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 14:46:53,228 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:59:20,613 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:59:31,285 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:59:41,289 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 14:59:50,283 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:00:09,893 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:00:17,863 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:00:28,327 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:00:55,248 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:01:00,077 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:01:13,920 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:02:02,866 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:02:17,841 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 15:43:15,701 [INFO] Use pytorch device_name: cpu
+2025-10-18 15:43:15,702 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 15:43:19,434 [INFO] Loading faiss with AVX2 support.
+2025-10-18 15:43:19,544 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 15:49:19,738 [INFO] Use pytorch device_name: cpu
+2025-10-18 15:49:19,738 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 15:49:23,205 [INFO] Loading faiss with AVX2 support.
+2025-10-18 15:49:23,323 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 15:50:20,067 [INFO] Use pytorch device_name: cpu
+2025-10-18 15:50:20,067 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 15:50:23,329 [INFO] Loading faiss with AVX2 support.
+2025-10-18 15:50:23,353 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 15:56:41,938 [INFO] Use pytorch device_name: cpu
+2025-10-18 15:56:41,938 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 15:56:45,616 [INFO] Loading faiss with AVX2 support.
+2025-10-18 15:56:45,644 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 16:34:26,940 [INFO] Use pytorch device_name: cpu
+2025-10-18 16:34:26,941 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 16:34:30,253 [INFO] Loading faiss with AVX2 support.
+2025-10-18 16:34:30,319 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 16:45:44,226 [INFO] Use pytorch device_name: cpu
+2025-10-18 16:45:44,227 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 16:45:47,654 [INFO] Loading faiss with AVX2 support.
+2025-10-18 16:45:47,729 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 16:53:22,488 [INFO] Use pytorch device_name: cpu
+2025-10-18 16:53:22,489 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 16:53:25,823 [INFO] Loading faiss with AVX2 support.
+2025-10-18 16:53:25,908 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 16:57:34,364 [INFO] Use pytorch device_name: cpu
+2025-10-18 16:57:34,364 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 16:57:37,880 [INFO] Loading faiss with AVX2 support.
+2025-10-18 16:57:37,935 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 17:03:01,881 [INFO] Use pytorch device_name: cpu
+2025-10-18 17:03:01,881 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 17:03:05,371 [INFO] Loading faiss with AVX2 support.
+2025-10-18 17:03:05,445 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 17:05:41,066 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 21:30:06,219 [INFO] Use pytorch device_name: cpu
+2025-10-18 21:30:06,220 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 21:30:09,944 [INFO] Loading faiss with AVX2 support.
+2025-10-18 21:30:10,087 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 21:31:58,722 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 22:05:09,401 [INFO] Use pytorch device_name: cpu
+2025-10-18 22:05:09,402 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-18 22:05:13,927 [INFO] Loading faiss with AVX2 support.
+2025-10-18 22:05:14,080 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-18 22:06:09,263 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 22:06:20,215 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-18 22:06:39,035 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"

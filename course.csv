@@ -1,39 +1,178 @@
-code,title,credits,description,prereqs
-CSC101,Introduction to Computer Systems and Applications,3,"Basics of computer hardware, software, networking; MS Office apps: Word, Excel, DB, presentations, web.", 
-CSC132,Digital Logic,3,"Number systems, Boolean algebra, logic gates and simplification, sequential circuits, logic circuit design.","CSC101"
-CSC140,Introduction to C Programming,3,"C basics: data types, bitwise ops, control flow, arrays, pointers, structs, I/O; binary number system.","CSC101"
-CSC230,Object-Oriented Computing,3,"OOP fundamentals: encapsulation, inheritance, polymorphism, abstraction.","CSC140"
-CSC231,Data Structure,3,"Stacks, queues, linked lists, trees/graphs; algorithm design and analysis over these structures.","CSC230"
-CSC232,C++ for Programmers,3,"C++ focus: memory management, classes, polymorphism, overloading, templates, I/O, inheritance models.","CSC230"
-CSC233,Python Programming,3,"Python fundamentals: variables, functions, conditionals, modules, common packages, lists/tuples/dicts.","CSC230"
-CSC235,Programming in Visual C# for .NET Technology,3,"C# and .NET desktop apps; Windows Forms, CLR, ADO.NET, XML, web services.","CSC230"
-CSC310,Open-Source Web Technologies / Web Design,3,"Web apps with open tools; HTML5/CSS3; forms, tables, multimedia, UI/business/db layers, deployment.","CSC231"
-CSC311,Mobile Application Programming,3,"Mobile app fundamentals; device capabilities, OS differences, SDK-based development.","CSC231"
-CSC312,ASP.NET Web Programming,3,"Web development with Microsoft ASP.NET and .NET framework.","CSC235"
-CSC313,Introduction to Artificial Intelligence,3,"Core AI problem-solving; ML algorithms and computational intelligence (fuzzy, evolutionary, soft computing).","CSC231"
-CSC333,Machine Learning,3,"Intro to ML: supervised/unsupervised learning, clustering, classification, SVM, ANN, deep learning.","CSC313"
-CSC334,Introduction to Computational Intelligence,3,"Fuzzy logic, evolutionary computation, soft computing; optimization, pattern recognition, decision making.","CSC335"
-CSC335,Pattern Recognition,3,"Pattern recognition pipeline: features, Bayes decision rule, classification, probability, LDA, SVM.","CSC333"
-CSC336,Data Mining,3,"Data acquisition/cleaning, modeling, classification, clustering, association analysis.","CSC335"
-CSC337,Software Engineering,3,"SE fundamentals: processes, project management; engineering + CS to produce reliable software.","CSC230"
-CSC343,Theory of Computation/Compiler,3,"Automata & formal languages from FSM to Turing machines; computability and languages.","CSC231"
-CSC344,Statistical Methods for Data Scientists,3,"Bias-variance, CV, train/test error, subset selection, regularization; trees, bagging, RF, SVM, clustering, PCA.","CSC333;STA210"
-CSC345,Introduction to Database,3,"Relational model, SQL, db programming; security, integrity, privacy; web DB applications.","CSC230"
-CSC348,Scalable Data Systems,3,"Algorithms and systems for big data; planning/execution of classic and modern big-data systems.","CSC333"
-CSC364,Computer Architecture,3,"Digital logic to architecture: assembly, addressing, ALU, I/O organization, memory mgmt, control unit.","CSC231;CSC343"
-CSC421,Cloud Computing,3,"Foundations and programming tools for cloud computing concepts and development.","CSC445"
-CSC422,Digital Image Processing,3,"2-D image processing: filtering, transforms, segmentation, morphology, denoising, features, registration.","MAT112;CSC231"
-CSC444,Computer Vision,3,"Vision fundamentals: feature detection/matching/tracking, classification, clustering, (un)supervised DL.","CSC422"
-CSC445,Introduction to Computer Networks,3,"Layered architectures, addressing/naming, forwarding/routing, reliability; client-server, web/email protocols.","CSC231"
-CSC446,Introduction to Bioinformatics,3,"Biological data (DNA/RNA/proteins); alignment (local/global/semi-global), search/matching, multiple alignment.","CSC333"
-CSC447,Computational Method in Bioinformatics,3,"Structure comparison/modeling, protein folding/recognition, docking, design.","CSC333"
-CSC448,Introduction to Cyber Security,3,"Cryptography, security management, wireless, policies; frameworks and defense mechanisms.","CSC445"
-CSC450,Fundamentals of Operating Systems,3,"OS concepts: processes, memory mgmt, scheduling, file and resource management.","CSC364"
-CSC454,Deep Learning,3,"DNNs: SGD/backprop, CNNs, kernels, loss/activations, feature hierarchies; classification/recognition/optimization.","CSC333"
-CSC465,Parallel and Distributed Computing,3,"ILP, shared/distributed memory, parallel algorithms and programming interfaces.","CSC364"
-CSC499,Senior Capstone Project,3,"Team project integrating CSC curriculum; demo + professional written/oral presentations.","300-level CSC courses"
-MAT111,Calculus I,3,"Functions, limits, continuity; derivatives & applications; antiderivatives; intro definite integrals.", 
-MAT112,Calculus II,3,"Integration techniques & applications; series and convergence tests; ODEs (separable/linear) apps.","MAT111"
-MAT130,Linear Algebra,3,"Matrices, determinants, linear transformations; geometric interpretations and applications.", 
-MAT202,Discrete Mathematics,3,"Logic, proof, induction, relations, sets, graph theory intro, functions.","MAT112"
-STA210,Applied Probability and Statistics,3,"Combinatorics, probability models, distributions, random variables, inference/tests, regression, CIs.","MAT112"
+﻿college,code,title,credits,description,prereqs
+CAS,CSC101,Introduction to Computer Systems and Applications,3,"Basics of computer hardware, software, networking; MS Office apps: Word, Excel, DB, presentations, web.", 
+CAS,CSC132,Digital Logic,3,"Number systems, Boolean algebra, logic gates and simplification, sequential circuits, logic circuit design.","CSC101"
+CAS,CSC140,Introduction to C Programming,3,"C basics: data types, bitwise ops, control flow, arrays, pointers, structs, I/O; binary number system.","CSC101"
+CAS,CSC230,Object-Oriented Computing,3,"OOP fundamentals: encapsulation, inheritance, polymorphism, abstraction.","CSC140"
+CAS,CSC231,Data Structure,3,"Stacks, queues, linked lists, trees/graphs; algorithm design and analysis over these structures.","CSC230"
+CAS,CSC232,C++ for Programmers,3,"C++ focus: memory management, classes, polymorphism, overloading, templates, I/O, inheritance models.","CSC230"
+CAS,CSC233,Python Programming,3,"Python fundamentals: variables, functions, conditionals, modules, common packages, lists/tuples/dicts.","CSC230"
+CAS,CSC235,Programming in Visual C# for .NET Technology,3,"C# and .NET desktop apps; Windows Forms, CLR, ADO.NET, XML, web services.","CSC230"
+CAS,CSC310,Open-Source Web Technologies / Web Design,3,"Web apps with open tools; HTML5/CSS3; forms, tables, multimedia, UI/business/db layers, deployment.","CSC231"
+CAS,CSC311,Mobile Application Programming,3,"Mobile app fundamentals; device capabilities, OS differences, SDK-based development.","CSC231"
+CAS,CSC312,ASP.NET Web Programming,3,"Web development with Microsoft ASP.NET and the .NET framework.","CSC235"
+CAS,CSC313,Introduction to Artificial Intelligence,3,"Core AI problem-solving; ML algorithms and computational intelligence (fuzzy, evolutionary, soft computing).","CSC231"
+CAS,CSC333,Machine Learning,3,"Intro to ML: supervised/unsupervised learning, clustering, classification, SVM, ANN, deep learning.","CSC313"
+CAS,CSC334,Introduction to Computational Intelligence,3,"Fuzzy logic, evolutionary computation, soft computing; optimization, pattern recognition, decision making.","CSC335"
+CAS,CSC335,Pattern Recognition,3,"Pattern recognition pipeline: features, Bayes decision rule, classification, probability, LDA, SVM.","CSC333"
+CAS,CSC336,Data Mining,3,"Data acquisition/cleaning, modeling, classification, clustering, association analysis.","CSC335"
+CAS,CSC337,Software Engineering,3,"SE fundamentals: processes, project management; engineering + CS to produce reliable software.","CSC230"
+CAS,CSC343,Theory of Computation/Compiler,3,"Automata & formal languages from FSM to Turing machines; computability and languages.","CSC231"
+CAS,CSC344,Statistical Methods for Data Scientists,3,"Bias-variance, CV, train/test error, subset selection, regularization; trees, bagging, RF, SVM, clustering, PCA.","CSC333;STA210"
+CAS,CSC345,Introduction to Database,3,"Relational model, SQL, db programming; security, integrity, privacy; web DB applications.","CSC230"
+CAS,CSC348,Scalable Data Systems,3,"Algorithms and systems for big data; planning/execution of classic and modern big-data systems.","CSC333"
+CAS,CSC364,Computer Architecture,3,"Digital logic to architecture: assembly, addressing, ALU, I/O organization, memory mgmt, control unit.","CSC231;CSC343"
+CAS,CSC421,Cloud Computing,3,"Foundations and programming tools for cloud computing concepts and development.","CSC445"
+CAS,CSC422,Digital Image Processing,3,"2-D image processing: filtering, transforms, segmentation, morphology, denoising, features, registration.","MAT112;CSC231"
+CAS,CSC444,Computer Vision,3,"Vision fundamentals: feature detection/matching/tracking, classification, clustering, (un)supervised DL.","CSC422"
+CAS,CSC445,Introduction to Computer Networks,3,"Layered architectures, addressing/naming, forwarding/routing, reliability; client-server, web/email protocols.","CSC231"
+CAS,CSC446,Introduction to Bioinformatics,3,"Biological data (DNA/RNA/proteins); alignment (local/global/semi-global), search/matching, multiple alignment.","CSC333"
+CAS,CSC447,Computational Method in Bioinformatics,3,"Structure comparison/modeling, protein folding/recognition, docking, design.","CSC333"
+CAS,CSC448,Introduction to Cyber Security,3,"Cryptography, security management, wireless, policies; frameworks and defense mechanisms.","CSC445"
+CAS,CSC450,Fundamentals of Operating Systems,3,"OS concepts: processes, memory mgmt, scheduling, file and resource management.","CSC364"
+CAS,CSC454,Deep Learning,3,"DNNs: SGD/backprop, CNNs, kernels, loss/activations, feature hierarchies; classification/recognition/optimization.","CSC333"
+CAS,CSC465,Parallel and Distributed Computing,3,"ILP, shared/distributed memory, parallel algorithms and programming interfaces.","CSC364"
+CAS,CSC499,Senior Capstone Project,3,"Team project integrating CSC curriculum; demo + professional written/oral presentations.","300-level CSC courses"
+CAS,MAT111,Calculus I,3,"Functions, limits, continuity; derivatives & applications; antiderivatives; intro definite integrals.", 
+CAS,MAT112,Calculus II,3,"Integration techniques & applications; series and convergence tests; ODEs (separable/linear) apps.","MAT111"
+CAS,MAT130,Linear Algebra,3,"Matrices, determinants, linear transformations; geometric interpretations and applications.", 
+CAS,MAT202,Discrete Mathematics,3,"Logic, proof, induction, relations, sets, graph theory intro, functions.","MAT112"
+CAS,STA210,Applied Probability and Statistics,3,"Combinatorics, probability models, distributions, random variables, inference/tests, regression, CIs.","MAT112"
+
+COP,CHE105,General Chemistry for Healthcare Professions,3,"Core general chemistry (stoichiometry, atomic structure, bonding, equilibria, thermochemistry, gases, solutions) with healthcare applications.", 
+COP,CHE105L,General Chemistry for Healthcare Professions Laboratory,1,"Hands-on experiments aligned with CHE105 topics.","CHE105 (Pre-/Co-req)"
+COP,CHE211,Organic Chemistry I,3,"Properties, reactions, synthesis by functional groups; aromatic/aliphatic hydrocarbons, alcohols, aldehydes/ketones, carboxylic acids/derivatives; spectroscopy.","CHE105"
+COP,CHE211L,Organic Chemistry I Laboratory,1,"Laboratory applications for Organic Chemistry I.","CHE211 (Pre-/Co-req)"
+COP,CHE212,Organic Chemistry II,3,"Continuation of Organic Chemistry I with advanced functional groups and reaction mechanisms.","CHE211"
+COP,BIO101,Introductory Biology,3,"Fundamentals of biological systems and processes at organismal and cellular levels.", 
+COP,BIO211,General Biology I,3,"Cells and macromolecules; membranes, organelles, cytoskeleton; signaling; genetic information flow; evolution.","BIO101"
+COP,BIO211L,General Biology I Laboratory,1,"Laboratory applications for General Biology I.","BIO211 (Pre-/Co-req)"
+COP,BIO217,Human Anatomy and Physiology,3,"Structure and function of major body systems; homeostasis; clinical case illustrations.","BIO211"
+COP,BIO219,Medical Microbiology & Immunology,3,"Characteristics of pathogens (bacteria, fungi, viruses, parasites); transmission, immunity, detection, and control.","BIO211"
+COP,BIO218,Pathophysiology,3,"Mechanisms and consequences of disease processes; cellular adaptation/injury; fluid/electrolyte and system-specific imbalances.","BIO217"
+COP,BIO225,Biochemistry,3,"Amino acids, proteins, enzymes; carbohydrates, lipids, nucleotides; metabolism, membranes/signaling, bioenergetics.","BIO211;CHE212"
+COP,BIO210,Biostatistics,3,"Research design; diagnostic test performance; descriptive statistics; probability; estimation; hypothesis testing; regression; clinical trials.", 
+COP,PHA101,Introduction to Pharmacy and Pharmaceutical Sciences,3,"History and evolution of pharmacy; practice domains; terms/abbreviations; organizations; dosage forms; ethics and professional conduct.", 
+COP,PHA300,Pharmacology I,3,"Fundamentals of pharmacology; mechanisms and effects; drugs targeting PNS/CNS; inflammation.","PHA101"
+COP,PHA300L,Pharmacology I Laboratory,1,"Experimental pharmacology skills (in vitro/in vivo assays, dosing, analysis) aligned with Pharmacology I.","PHA300 (Pre-/Co-req)"
+COP,PHA350,Pharmacology II,3,"Continuation of Pharmacology I: cardiovascular, antidiabetic, antifungal, antibiotics, chemotherapy agents.","PHA300"
+COP,PHA310,Dosage Forms I,3,"Design/formulation/manufacture/evaluation of liquid dosage forms; GMP; solutions, suspensions, emulsions, colloids; routes of administration.", 
+COP,PHA310L,Dosage Forms I Laboratory,1,"Compounding and labeling of liquid/colloidal dosage forms; calculations and procedures.","PHA310 (Pre-/Co-req)"
+COP,PHA360,Dosage Forms II,3,"Design/formulation/manufacture/evaluation of semi-solid/solid/novel dosage forms.","PHA310;PHA310L"
+COP,PHA360L,Dosage Forms II Laboratory,1,"Preparation and evaluation of gels, ointments, creams, suppositories, tablets, and topical products.","PHA360 (Pre-/Co-req)"
+COP,PHA320,Medicinal Chemistry I,3,"Drug action mechanisms; integrate toxicology, pharmacology, computation, and clinical insights for design of improved agents.", 
+COP,PHA370,Medicinal Chemistry II,3,"Drug classes (neurologic, anesthetic, analgesic, anti-inflammatory, antibacterial, cardiovascular); PK/PD profiles.","PHA330"
+COP,PHA330,Pharmaceutical Analysis,3,"Equilibria in analysis; titrimetric methods; instrumental techniques; chromatography basics for drugs and dosage forms.", 
+COP,PHA330L,Pharmaceutical Analysis Laboratory,1,"Applied analytical methods and instrument techniques for pharmaceutical materials.","PHA330 (Pre-/Co-req)"
+COP,PHA380,Pharmacotherapeutics I,3,"Self-care, immunizations, GI/hepatic/pulmonary disorders; monitoring parameters; side effects; patient-centered plans.", 
+COP,PHA380L,Pharmacotherapeutics I: Applied Skills Lab,1,"Community practice skills using QuEST/SCHOLAR-MACS; OSCE assessment.","PHA380 (Co-req)"
+COP,PHA390,Drug Information and Literature Evaluation,2,"Medical terminology; monographs; SOAP notes; consultations; literature types; basic biostatistics in drug evaluation.", 
+COP,PHA410,Physical Assessment,3,"Patient interviewing and physical exam skills; vital signs; systems examination; communication for pharmacy services.", 
+COP,PHA420,Pharmacotherapeutics II,3,"Psychological, neurological, cardiovascular disorders; monitoring and side effects; patient-centered treatment plans.","PHA380"
+COP,PHA430,Pharmacotherapeutics III,3,"Infectious diseases; monitoring and significant side effects; patient-centered plans.","PHA380"
+COP,PHA440,Toxicology,3,"Human toxicity factors; toxicokinetics; diagnosis/management of poisonings; pesticides, metals, solvents, common medications.", 
+COP,PHA450,Dispensing and Pharmaceutical Care,3,"Safe/accurate dispensing in community/hospital settings; counseling; conflict management; leadership; OTC care.", 
+COP,PHA460,Pharmacognosy and Evidence-Based Herbal Medicine,3,"Natural products: origins, identification, SAR, roles in drug development; evidence-based use.", 
+COP,PHA470,Pharmacotherapeutics IV,3,"Renal, endocrine, rheumatologic disorders; monitoring and major side effects; patient-centered plans.","PHA380"
+COP,PHA480,Pharmacotherapeutics V,3,"Oncology; women’s/men’s health; hematology; therapy selection, interactions, ADRs; antimicrobial stewardship.","PHA380"
+COP,PHA500,Pharmacy Management and Drug Marketing,3,"Management functions and resources across pharmacy settings; operations, finance, services, risk management.", 
+COP,PHA510,Pharmacoepidemiology,2,"Epidemiology in pharmacy; causality, bias, confounding; study designs; pharmacovigilance and post-marketing surveillance.", 
+COP,PHA520,U.S. and Iraqi Pharmacy Law and Regulation,1,"Licensure and regulatory frameworks for community/hospital pharmacies and manufacturing/import; US vs. Iraq comparison.", 
+COP,PHA545,Introductory Pharmacy Practice Experience III (PPE III),6,"Advanced patient evaluation, literature-guided planning, interactions monitoring, counseling, and administrative skills.","PHA495"
+COP,PHA550,Pharmaco-genomics,3,"Molecular genetics basis of response variability; transport/metabolism pharmacogenetics; clinical applications across specialties.", 
+COP,PHA560,Pharmaco-economics,3,"Cost models (CMA/CEA/CUA/CBA/cost of illness); modeling and discounting; evaluation and decision-making.", 
+COP,PHA580,Pharmacotherapeutics VI (Elective),3,"Advanced therapeutics in oncology and related areas; guideline-based, case-driven treatment design.", 
+COP,PHA581,Clinical Nutrition and Diet Therapy (Elective),3,"Nutrients and disease; evidence-based parenteral/enteral nutrition planning, monitoring, and delivery.", 
+COP,PHA582,Dermatology and Cosmetology (Elective),3,"Dermatologic disorders: evaluation/treatment/referral; foundations of pharmaceutical cosmetology.", 
+COP,PHA583,Clinical and Pharmacy Management (Elective),3,"Utilization/care management, formulary, strategy, specialty pharmacy, managed care, leadership; selected regulatory topics.", 
+COP,PHA395,Introductory Pharmacy Practice Experience I (PPE I),3,"Community/hospital practice exposure: operations, inventory, services; para-pharmaceutical items; management approaches.", 
+COP,PHA495,Introductory Pharmacy Practice Experience II (PPE II),3,"Hospital-focused practice: drug information, order screening/interventions, administration, accreditation, distribution systems.","PHA395"
+COP,PHA595,Introductory Pharmacy Practice Experience IV (PPE IV),9,"Capstone experiential rotations (e.g., internal medicine, pediatrics, critical care); therapeutic monitoring and consultation.","PHA545"
+
+COD,BDS101,Dental Anatomy,3,"Tooth morphology and occlusion; anatomy of primary and permanent dentitions with clinical correlations.",
+COD,BDS102,Oral Histology & Embryology,3,"Microscopic structure and development of oral tissues including enamel, dentin, pulp, cementum, and periodontium.",
+COD,BDS103,Human Physiology for Dentistry,3,"Fundamental physiology of major systems with emphasis on oral-facial relevance and homeostasis.",
+COD,BDS104,Medical Biochemistry for Dentistry,3,"Biomolecules, enzymes, metabolism, and biochemical basis of disease with dental applications.",
+COD,BDS105,Introduction to Dentistry & Professionalism,2,"Orientation to dental profession, ethics, patient safety, infection control, and basic clinical communication.",
+COD,BDS106,Dental Materials I,3,"Composition, properties, and handling of dental materials; biocompatibility and clinical selection.",
+COD,BDS106L,Dental Materials Laboratory I,1,"Hands-on manipulation and testing of restorative and impression materials.","BDS106 (Pre-/Co-req)"
+COD,BDS107,Preclinical Operative Dentistry I,3,"Principles of caries diagnosis and cavity preparation; intro to direct restorative techniques.",
+COD,BDS107L,Preclinical Operative Dentistry Lab I,1,"Simulation lab for cavity preparation and direct restorations.","BDS107 (Pre-/Co-req)"
+COD,BDS108,Preclinical Prosthodontics I,3,"Foundations of removable and fixed prosthodontics: impressions, casts, occlusal records.",
+COD,BDS108L,Preclinical Prosthodontics Lab I,1,"Simulation lab for impressions, jaw relation records, and basic prosthodontic procedures.","BDS108 (Pre-/Co-req)"
+COD,BDS201,Medical Microbiology & Immunology,3,"Pathogenic microorganisms, host response, sterilization/disinfection, antimicrobial stewardship.",
+COD,BDS202,General Pathology,3,"Cell injury, inflammation, neoplasia, hemodynamic and genetic disorders with clinical correlations.",
+COD,BDS203,Pharmacology for Dentistry,3,"Drug classes relevant to dental practice, mechanisms, interactions, and safe prescribing.",
+COD,BDS204,Dental Radiology,3,"Radiographic physics, imaging techniques, interpretation, radiation biology and protection.",
+COD,BDS205,Oral Pathology,3,"Diseases of oral and maxillofacial tissues: etiology, clinical features, diagnosis, and management.","BDS202"
+COD,BDS206,Preclinical Endodontics,2,"Pulp biology and canal instrumentation; principles of cleaning, shaping, and obturation.","BDS107"
+COD,BDS206L,Preclinical Endodontics Laboratory,1,"Simulation of endodontic access, working length determination, and obturation.","BDS206 (Pre-/Co-req)"
+COD,BDS207,Preclinical Periodontology,2,"Periodontal anatomy, etiology of periodontal diseases, diagnosis and initial therapy.","BDS107"
+COD,BDS207L,Preclinical Periodontology Laboratory,1,"Instrumentation, scaling, and root planing on simulators.","BDS207 (Pre-/Co-req)"
+COD,BDS208,Preclinical Orthodontics,2,"Growth and development, malocclusion classification, basics of orthodontic diagnosis.",
+COD,BDS208L,Preclinical Orthodontics Laboratory,1,"Wire bending, appliance components, and model analysis.","BDS208 (Pre-/Co-req)"
+COD,BDS301,Operative Dentistry I,3,"Diagnosis and management of caries; direct/indirect restorations with modern adhesive techniques.","BDS107"
+COD,BDS302,Removable Prosthodontics I,3,"Complete and partial dentures: assessment, design, and clinical procedures.","BDS108"
+COD,BDS303,Fixed Prosthodontics I,3,"Crowns and fixed partial dentures: tooth preparation, provisionalization, and impression techniques.","BDS108"
+COD,BDS304,Endodontics I,3,"Diagnosis of pulpal and periapical diseases; non-surgical root canal therapy.","BDS206"
+COD,BDS305,Periodontology I,3,"Diagnosis and treatment planning for periodontal diseases; non-surgical therapy and maintenance.","BDS207"
+COD,BDS306,Oral & Maxillofacial Surgery I,3,"Exodontia principles, surgical asepsis, local anesthesia, and management of surgical complications.","BDS204"
+COD,BDS307,Oral Medicine & Diagnosis,3,"Medical evaluation of dental patients; oral manifestations of systemic disease; differential diagnosis.","BDS204"
+COD,BDS308,Pedodontics (Pediatric Dentistry) I,3,"Growth and behavior management; prevention and restorative care for children and adolescents.","BDS301"
+COD,BDS309,Preventive & Community Dentistry,3,"Epidemiology of oral disease, prevention strategies, health promotion, and community programs.",
+COD,BDS310,Orthodontics I,3,"Orthodontic diagnosis, treatment objectives, and interceptive approaches.","BDS208"
+COD,BDS311,Prosthodontic Materials & Occlusion,3,"Advanced materials selection; articulators, occlusal schemes, and functional analysis.","BDS106;BDS108"
+COD,BDS312,Special Care Dentistry,2,"Care for medically complex and special needs patients; risk assessment and modifications.","BDS307"
+COD,BDS401,Clinical Operative Dentistry,4,"Comprehensive clinical management of operative cases including esthetics and adhesive dentistry.","BDS301"
+COD,BDS402,Clinical Removable Prosthodontics,4,"Clinical delivery of complete and partial dentures; adjustments and maintenance.","BDS302"
+COD,BDS403,Clinical Fixed Prosthodontics,4,"Preparation, impression, temporization, and delivery of crowns/bridges in clinic.","BDS303"
+COD,BDS404,Clinical Endodontics,3,"Diagnosis and non-surgical endodontic treatment of indicated teeth in clinic.","BDS304"
+COD,BDS405,Clinical Periodontology,3,"Non-surgical and selected surgical periodontal therapies; maintenance protocols.","BDS305"
+COD,BDS406,Clinical Oral & Maxillofacial Surgery,3,"Dentoalveolar surgery, minor oral surgical procedures, and peri-operative care.","BDS306"
+COD,BDS407,Clinical Oral Medicine & Diagnosis,3,"Comprehensive patient assessment and medical risk management in dental clinic.","BDS307"
+COD,BDS408,Clinical Orthodontics,3,"Clinical execution of orthodontic treatment plans; appliance therapy and monitoring.","BDS310"
+COD,BDS409,Clinical Pediatric Dentistry,3,"Preventive and restorative pediatric care; pulp therapy and space maintenance.","BDS308"
+COD,BDS410,Comprehensive Care/Integrated Clinic,5,"Team-based comprehensive dental care integrating all disciplines; case completion and outcomes assessment.","BDS401;BDS402;BDS403;BDS404;BDS405;BDS406;BDS407"
+COD,BDS411,Public Health Dentistry Field Experience,2,"Community rotations, needs assessment, program design, and outcome evaluation.","BDS309"
+COD,BDS412,Research Methods & Evidence-Based Dentistry,2,"Study designs, biostatistics basics, critical appraisal, and clinical guideline application.",
+COD,BDS413,Practice Management & Ethics,2,"Clinic operations, recordkeeping, economics, law, ethics, and professionalism.",
+COD,BDS414,Infection Control & Patient Safety,1,"Standards, protocols, and quality assurance for infection prevention in dental settings.",
+
+college,code,title,credits,description,prereqs
+CAS,UNI101,First-Year University Experience,3,"Acclimates students to university life: study skills, information literacy, diversity, and collaborative learning.",
+
+CAS,ENL101,Expository Writing,3,"Practice writing in multiple genres; develop argument and voice using sources within academic/public debates.",
+CAS,ENL201,Academic Writing,3,"Advanced academic research and writing integrating sources across disciplines.","ENL101"
+CAS,ENL210,Introduction to Public Speaking,3,"Fundamentals of public speaking and rhetoric; ethical use of sources; planned and extemporaneous delivery.","ENL101"
+
+CAS,MAT101,College Algebra,3,"Linear and nonlinear functions, equations/inequalities, data analysis, probability, and problem solving with applications.",
+
+CAS,HIS101,Civilizations and History I,3,"Global survey of civilizations through 1500 across arts, politics, philosophy, and religion; pluralistic perspective.",
+CAS,HIS102,Civilizations and History II,3,"Civilizations since 1400: Renaissance to modern era; global encounters, empire, revolutions, and social change.",
+CAS,HIS105,Introduction to Contemporary History,3,"World history from late 19th to early 21st centuries: empires, states, wars, ideas, and economic transformations.",
+CAS,HUM101,Introduction to Humanities,3,"Interdisciplinary study of art, architecture, literature, music, philosophy, and religion; what it means to be human.",
+CAS,LIT101,Introduction to World Literature,3,"Genres, forms, and critical approaches; close reading of global authors and traditions.",
+CAS,PHA210,Introduction to Global Health,3,"Key concepts, disparities, systems, and policies shaping global health challenges and responses.",
+CAS,PHI101,Introduction to Ethics,3,"Classical and applied ethics across traditions; moral reasoning in real-world contexts.",
+CAS,POL125,American Culture, Politics, & Society,3,"Survey of U.S. culture, political institutions, and social dynamics in historical and contemporary perspective.",
+
+CAS,TLD100,Introduction to AUIB Educational Design and Studies,3,"How students learn in American-style universities; norms, expectations, and the learning process.",
+CAS,TLD101,Foundations of Special Education (SPED),3,"Global perspectives on disability and inclusion; development, identification, and instructional approaches.",
+CAS,TLD102,Foundations of Learning & Design,3,"Learning frameworks and observation in schools/NGOs; roles, values, and tools for educational practice.",
+CAS,TLD103,Global Dimensions of Development and Education,3,"Comparative education and human development; access, quality, equity, and efficiency in global contexts.",
+
+CAS,COM101,Introduction to Communications,3,"Public/persuasive speaking, interpersonal/group dynamics, media literacy, and ethics in contemporary contexts.",
+CAS,ECO101,History of Economic Thought,3,"Classical to modern schools of thought (Smith, Ricardo, Marx, Keynes); debates on markets, policy, and growth.",
+CAS,FIN101,Finance for Non-Business Students,3,"Core finance concepts and applications in personal, corporate, banking, and international contexts.",
+CAS,HCT108,Introduction to Public Health,3,"Community health data, social determinants, disparities, risk communication, and planning foundations.",
+CAS,MIS101,Introduction to Management Information Systems,3,"Information systems foundations, strategy, and organizational impact in a connected world.","Completed or enrolled in Level 6 ASP"
+CAS,POL101,Introduction to Political Science,3,"Institutions, behavior, ideologies, and comparative/international politics; analytical tools and concepts.",
+CAS,POL112,Globalization and World Politics,3,"Evolution of global order; actors, structures, and contemporary issues (economy, law, security, rights).",
+CAS,POL191,Global Climate Change,3,"Science of climate systems and the cultural/political dimensions of climate change debates and policies.",
+CAS,PSY101,Introduction to Psychology,3,"Foundations of psychological science: cognition, development, personality, psychopathology, methods, and applications.",
+CAS,SOC101,Introduction to Sociology,3,"Society, culture, institutions, inequality, and social change; theory, methods, and contemporary issues.",
+
+CAS,CHE100,Chemistry in Our Life,3,"Chemistry in everyday life: materials, food, health, environment, consumer products, and forensics (non-majors).",
+CAS,ENV201,Environmental Science,3,"Biodiversity, ecosystems, resources, climate change, energy, and sustainability; scientific and social perspectives.",
+CAS,GEO101,Introduction to Geography,3,"Physical and human geography: earth systems, environments, human-environment interactions, and spatial analysis.",
+CAS,PHY100,Conceptual Physics,3,"Conceptual foundations of mechanics, waves, light, electricity/magnetism, and nuclear topics; minimal math.","MAT101 (Co-req)"
+CAS,PHY105,Descriptive Astronomy,3,"Descriptive survey of astronomy and cosmology: solar system, stars, galaxies, universe, and life in the cosmos.",

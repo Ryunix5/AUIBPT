@@ -1,0 +1,157 @@
+{
+  "university": {
+    "facts": [
+      "American University of Iraq–Baghdad (AUIB), private non-profit; established 2018; first classes Feb 2021.",
+      "Campus located at the Al-Faw Palace complex near Baghdad International Airport; historic site modernized for learning.",
+      "English-language, American-style curriculum with liberal arts core for undergraduates."
+    ],
+    "leadership": [
+      "President: Brad (John Bradley) Cook.",
+      "VP Academic Affairs: Zouhair K. Atieh.",
+      "Deans: CAS – Monica Hanna; COP – Achraf Al Faraj; COD – Nada Naaman."
+    ],
+    "accreditations": [
+      "Recognized by Iraq’s Ministry of Higher Education and Scientific Research.",
+      "College of Pharmacy (B.Pharm): ACPE International Pre-accreditation.",
+      "College of Dentistry: Member of Association for Dental Education in Europe (ADEE)."
+    ],
+    "programs": [
+      "CAS: Biology, Chemistry, Physics, Computer Science, English, History/Archaeology, Psychology, more.",
+      "COP: B.Pharm 5-year program (clinical & industrial tracks).",
+      "COD: BDS 5-year, ~189 credits (preclinical to clinical training)."
+    ],
+    "partnerships": [
+      "Partners/links include Vanderbilt (Education), Lawrence Tech/Temple (Engineering), Exeter (UK), Sapienza (Italy)."
+    ]
+  },
+  "faculty": [
+    {
+      "college": "CAS",
+      "name": "Monica Hanna",
+      "title": "Dean, College of Arts & Sciences; Egyptologist",
+      "areas": "Archaeology, cultural heritage",
+      "prior": "American Univ. in Cairo; Univ. of Pisa; Aswan Univ. (Egypt)",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Doris Jaalouk",
+      "title": "Professor of Biology/Public Health",
+      "areas": "Public health, health education, nutrition",
+      "prior": "Notre Dame Univ.–Louaize (Lebanon)",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Robert David Putnam",
+      "title": "Assistant Professor of History",
+      "areas": "Modern Iraqi/Middle East history",
+      "prior": "Seattle Pacific Univ.; research posts",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Mutasem Sinnokrot",
+      "title": "Associate Professor of Chemistry/Physics",
+      "areas": "Materials & chemical engineering, physical chemistry",
+      "prior": "Khalifa Univ. (UAE); other posts",
+      "notes": "~35 publications; >5k citations (approx.)"
+    },
+    {
+      "college": "CAS",
+      "name": "Dhrgam Al Kafaf",
+      "title": "Assistant Professor of Computer Science",
+      "areas": "Artificial intelligence, autonomous systems, computer vision",
+      "prior": "Research posts in AI/computer vision",
+      "notes": "Faculty Senate (Educational Resources Committee)"
+    },
+    {
+      "college": "CAS",
+      "name": "Ahmed Elshewy",
+      "title": "Assistant Professor of Chemistry",
+      "areas": "Medicinal & organic chemistry, catalysis",
+      "prior": "Cairo Univ.; postdoctoral work",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Christos Kokorelis",
+      "title": "Associate Professor of Mathematical Physics",
+      "areas": "String theory, mathematical physics",
+      "prior": "University of Sussex (UK)",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Ioannis Haranas",
+      "title": "Associate Professor of Astrophysics",
+      "areas": "Astrophysics, planetary & space physics",
+      "prior": "Wilfrid Laurier Univ. (Canada)",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "John Wall",
+      "title": "Associate Professor of English & Linguistics",
+      "areas": "Literature, linguistics, philosophy",
+      "prior": "Positions in UK & Middle East",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Haidar Sabbagh",
+      "title": "Assistant Professor of Physics",
+      "areas": "Applied physics, electronics, renewables",
+      "prior": "Industry & academia in Iraq",
+      "notes": ""
+    },
+    {
+      "college": "CAS",
+      "name": "Mohammad F. Kazan",
+      "title": "Associate Professor; Head of Natural & Applied Sciences",
+      "areas": "Molecular immunology, cytokines",
+      "prior": "Faculty roles in Lebanon",
+      "notes": ""
+    },
+    {
+      "college": "COP",
+      "name": "Achraf Al Faraj",
+      "title": "Dean, College of Pharmacy; Professor",
+      "areas": "Nanomedicine, drug delivery",
+      "prior": "Univ. Lyon 1 (France); King Saud Univ. (Saudi Arabia); Lebanon",
+      "notes": "Founding Dean; 50+ publications (approx.)"
+    },
+    {
+      "college": "COP",
+      "name": "Baher S. Daihom",
+      "title": "Assistant Professor of Pharmaceutics",
+      "areas": "Pharmaceutics, 3D-printed drug delivery",
+      "prior": "Pharmaceutics PhD; international conference presentations",
+      "notes": "Research on 3D-printed implants"
+    },
+    {
+      "college": "COP",
+      "name": "Rana Alaaeddine",
+      "title": "Assistant Professor of Pharmacology",
+      "areas": "Cardiovascular pharmacology, therapeutics",
+      "prior": "American Univ. of Beirut (AUB)",
+      "notes": ""
+    },
+    {
+      "college": "COP",
+      "name": "Adib Charafeddine",
+      "title": "Assistant Professor of Medicinal Chemistry",
+      "areas": "Medicinal/organic chemistry, drug design",
+      "prior": "Academic roles in Lebanon",
+      "notes": ""
+    },
+    {
+      "college": "COD",
+      "name": "Nada Naaman",
+      "title": "Dean, College of Dentistry; Periodontist",
+      "areas": "Periodontology, implant dentistry",
+      "prior": "Saint Joseph Univ. (Beirut); Paris Diderot Univ. (France)",
+      "notes": "Former dean; Secretary General of Arab Dental Faculties"
+    }
+  ]
+}

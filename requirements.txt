@@ -1,0 +1,7 @@
+streamlit>=1.36
+langchain>=0.2
+langchain-core>=0.2
+langchain-openai>=0.1.7
+faiss-cpu>=1.8.0
+numpy>=1.26
+pandas>=2.2

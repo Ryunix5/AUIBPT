@@ -3,13 +3,13 @@
 # - College-aware CSV (college,code,title,credits,description,prereqs)
 # - Hybrid retrieval (FAISS + optional BM25 via lazy import)
 # - Splash & footer (Ryunix Productions)
-# - 🗓️ Schedule Builder: LA rules + major prereqs + per-course swap + auto top-up + undo + lock
+# - Schedule Builder: LA rules + major prereqs + per-course swap + auto top-up + undo + lock
 # - Picker persists selections across filter changes (Major / LA / Both)
 # - Export schedule (CSV) + Save/Load (JSON)
 # - Student profile context — user “Completed Courses” feed the chat answers
 # - Institutional KB (AUIB + CAS/COP/COD + faculty) with dedicated prompt & routing
 # - Profile picture avatar + GUI color customizer
-# - OpenAI-first LLM (Streamlit Cloud ready) with Ollama fallback for local
+# - OpenAI-first LLM (Streamlit Cloud ready) with Groq/Ollama fallback for local
 
 from __future__ import annotations
 
@@ -26,47 +26,30 @@ from typing import List, Dict, Tuple, Optional, Set
 
 import streamlit as st
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.callbacks import BaseCallbackHandler  # fixed import (no langchain.callbacks)
+from langchain_core.callbacks import BaseCallbackHandler
 
 from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT, USE_OPENAI
 from data_loader import load_catalog_rows, rows_to_documents
 from indexer import ensure_index, load_index, rebuild_index
 
-# --- OpenAI key resolution (safe locally + Streamlit Cloud) ---
-def _get_openai_key() -> str | None:
-    # 1) environment variable
-    key = os.getenv("OPENAI_API_KEY")
-    if key:
-        return key
-    # 2) Streamlit Cloud / local secrets.toml (optional)
-    try:
-        return st.secrets["OPENAI_API_KEY"]  # will raise if secrets missing
-    except Exception:
-        return None
-
-OPENAI_KEY = _get_openai_key()
-if OPENAI_KEY:
-    os.environ["OPENAI_API_KEY"] = OPENAI_KEY  # for SDKs that read from env
-
-# --- Safe secrets/env access (works locally + Streamlit Cloud) ---
+# --- Secrets / keys (env + streamlit secrets) ---
 def _get_secret(key: str) -> str | None:
     val = os.getenv(key)
     if val:
         return val
     try:
-        return st.secrets[key]  # may raise if secrets.toml is absent
+        return st.secrets[key]
     except Exception:
         return None
 
 OPENAI_KEY = _get_secret("OPENAI_API_KEY")
-GROQ_KEY   = _get_secret("GROQ_API_KEY")  # ← add this in Streamlit Secrets when you can
+GROQ_KEY   = _get_secret("GROQ_API_KEY")
 
 if OPENAI_KEY:
     os.environ["OPENAI_API_KEY"] = OPENAI_KEY
 if GROQ_KEY:
     os.environ["GROQ_API_KEY"] = GROQ_KEY
 
-# Optional import for catching OpenAI rate limits
 try:
     import openai
     OpenAIRateLimitError = openai.RateLimitError
@@ -74,8 +57,52 @@ except Exception:
     class OpenAIRateLimitError(Exception): ...
 
 # ---------------------- UI CONFIG ----------------------
-page_icon = "RP.png" if os.path.exists("RP.png") else "🎓"
+page_icon = "RP.png" if os.path.exists("RP.png") else None
 st.set_page_config(page_title="AUIBPT • Course Chatbot", page_icon=page_icon, layout="wide")
+
+# Hide sidebar; widen main
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"] { display: none !important; }
+    .main .block-container { max-width: 1200px; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ---------------------- Global polish CSS ----------------------
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Ubuntu, Arial, "Noto Sans", sans-serif;
+        line-height: 1.55;
+    }}
+    .main .block-container {{
+        max-width: 1100px;
+        padding-top: 1.25rem;
+    }}
+    [data-testid="stChatMessage"] {{
+        padding: 0.6rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.02);
+        margin-bottom: 0.35rem;
+    }}
+    [data-testid="stChatMessage"] .stMarkdown p {{ margin-bottom: 0.35rem; }}
+    .stButton>button, .stDownloadButton>button {{
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        transition: transform .02s ease-in;
+    }}
+    .stButton>button:active {{ transform: translateY(1px); }}
+    pre, code {{ font-size: 0.93rem; }}
+    hr {{ border-color: rgba(255,255,255,0.12) !important; }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # ---------------------- LOGGING ----------------------
 logging.basicConfig(filename="app.log", level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -104,7 +131,6 @@ DEPT_PREFIXES = {
 KNOWN_COLLEGES = {"All", "CAS", "COP", "COD"}
 LANG_OPTIONS = {"English": "English", "Arabic": "Arabic"}
 
-# Degree totals by program
 DEGREE_TOTAL = {"CS": 126, "Pharmacy": 180, "Dentistry": 189}
 MAJOR_MAP = {
     "CS": {"college": "CAS", "prefixes": ("CSC", "MAT", "STA")},
@@ -160,7 +186,6 @@ UNIV_KB_SEED = {
 }
 
 def load_university_kb() -> dict:
-    """Load institutional KB from JSON if present, else fall back to seed."""
     path = "auib_university_kb.json"
     if os.path.exists(path):
         try:
@@ -189,13 +214,11 @@ def is_university_query(q: str) -> bool:
     return has_name or hook
 
 def univ_kb_blocks_for(q: str, limit: int = 24) -> str:
-    """Return a compact textual KB block drawn from UNIV_KB for the LLM."""
     ql = (q or "").lower()
     fac = UNIV_KB.get("faculty", [])
     scored = []
     for f in fac:
         blob = " ".join([f.get("name",""), f.get("title",""), f.get("areas",""), f.get("prior",""), f.get("college","")]).lower()
-        score = 0
         A = set(re.sub(r"[^\w\s]", " ", ql).split())
         B = set(re.sub(r"[^\w\s]", " ", blob).split())
         score = len(A & B)
@@ -226,7 +249,7 @@ def univ_kb_blocks_for(q: str, limit: int = 24) -> str:
             )
     return "\n".join(lines) if lines else ""
 
-# ---------------------- PROMPTS (friendly / interactive) ----------------------
+# ---------------------- PROMPTS ----------------------
 COURSE_PROMPT = """
 You are AUIBPT, a sharp and friendly university course assistant. Your vibe is upbeat, helpful, and concise.
 Use ONLY the provided course knowledge base (kb). If an item is missing in kb, write "Unknown"—do not invent.
@@ -476,7 +499,6 @@ def parse_catalog_intent(q: str) -> Dict | None:
 
 # ---------------------- HYBRID RETRIEVAL ----------------------
 def _try_init_bm25(corpus_texts: List[str]):
-    """Optional BM25 via lazy import. Returns None if unavailable."""
     try:
         spec = importlib.util.find_spec("rank_bm25")
         if spec is None: return None
@@ -529,7 +551,6 @@ def prepare_kb_from_docs(docs) -> str:
 
 # ---------------------- LLM & STREAMING ----------------------
 class StreamHandler(BaseCallbackHandler):
-    
     def __init__(self, placeholder): self.placeholder = placeholder; self.text = ""
     def on_llm_new_token(self, token, **_): self.text += token; self.placeholder.markdown(self.text)
 
@@ -546,43 +567,6 @@ def _make_openai_llm(model_name: str, temperature: float, num_predict: int, call
     )
 
 def _make_groq_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    # Recommended fast Groq models: "llama-3.1-8b-instant" or "llama3-8b-8192"
-    from langchain_groq import ChatGroq
-    return ChatGroq(
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=num_predict,
-        streaming=True,
-        callbacks=callbacks or [],
-        max_retries=8,
-        timeout=60.0,
-    )
-
-def _make_ollama_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    from langchain_ollama import OllamaLLM
-    return OllamaLLM(
-        model=model_name,
-        temperature=temperature,
-        num_predict=num_predict,
-        stop=["</final>"],
-        callbacks=callbacks or [],
-    )
-
-# === Provider factories ===
-def _make_openai_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(
-        model=model_name,
-        temperature=temperature,
-        max_tokens=num_predict,
-        streaming=True,
-        callbacks=callbacks or [],
-        max_retries=8,
-        timeout=60.0,
-    )
-
-def _make_groq_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    # Good default: "llama-3.1-8b-instant"
     from langchain_groq import ChatGroq
     return ChatGroq(
         model_name=model_name,
@@ -605,19 +589,12 @@ def _make_ollama_llm(model_name: str, temperature: float, num_predict: int, call
     )
 
 def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=None):
-    """
-    Priority:
-      1) OpenAI (if key present and USE_OPENAI True)
-      2) Groq (if key present)
-      3) Ollama (local)
-    """
     effective_use_openai = bool(OPENAI_KEY) and USE_OPENAI
     if effective_use_openai:
         try:
             return _make_openai_llm(model_name, temperature, num_predict, callbacks)
         except Exception as e:
             st.warning(f"OpenAI init failed: {e}. Trying Groq…")
-
     if GROQ_KEY:
         try:
             groq_model = model_name
@@ -626,11 +603,9 @@ def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=No
             return _make_groq_llm(groq_model, temperature, num_predict, callbacks)
         except Exception as e:
             st.warning(f"Groq init failed: {e}. Trying Ollama…")
-
     try:
         return _make_ollama_llm(model_name, temperature, num_predict, callbacks)
     except Exception:
-        # final safety net
         from langchain_openai import ChatOpenAI
         st.warning("No Groq key and Ollama not available. Using OpenAI mini as last resort.")
         return ChatOpenAI(
@@ -643,11 +618,7 @@ def make_llm(model_name: str, temperature: float, num_predict: int, callbacks=No
             timeout=60.0,
         )
 
-
-
-
 def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, student_context: str, placeholder, univ_kb: str = "", groq_fallback_chain=None) -> str:
-    """Stream tokens. On OpenAI rate limit or API errors, fall back to Groq if available."""
     handler = StreamHandler(placeholder)
     payload = {
         "kb": kb,
@@ -664,16 +635,14 @@ def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, 
         else:
             return c.invoke(payload)
 
-    # 1) Primary attempt (stream)
     try:
         raw = _invoke(chain, stream=True)
         final_text = _clean_output(_to_str(raw).strip())
         placeholder.markdown(final_text)
         return final_text
     except OpenAIRateLimitError as e:
-        # Switch to Groq immediately if available
         if groq_fallback_chain is not None:
-            st.info("⚡ Switching to Groq due to OpenAI rate limit.")
+            st.info("Switching to Groq due to OpenAI rate limit.")
             try:
                 raw = _invoke(groq_fallback_chain, stream=True)
                 final_text = _clean_output(_to_str(raw).strip())
@@ -684,7 +653,6 @@ def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, 
         else:
             last_err = e
     except Exception as e:
-        # Try non-streaming once with primary
         try:
             raw = _invoke(chain, stream=False)
             final_text = _clean_output(_to_str(raw).strip())
@@ -693,7 +661,6 @@ def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, 
         except Exception as ee:
             last_err = ee
 
-    # 2) If we got here and have Groq, try non-streaming Groq once
     if groq_fallback_chain is not None:
         try:
             raw = _invoke(groq_fallback_chain, stream=False)
@@ -703,12 +670,10 @@ def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, 
         except Exception as ee:
             last_err = ee
 
-    # 3) Graceful failure
     log.error(f"LLM failure (after Groq fallback if any): {last_err}")
     msg = "We’re a bit busy right now. Please try again in ~30–60s."
     placeholder.warning(msg)
     return msg
-
 
 # ---------------------- SPLASH ----------------------
 def show_splash():
@@ -751,67 +716,41 @@ def apply_theme(primary: str, bg: str, text: str):
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# ---------------------- SIDEBAR ----------------------
-with st.sidebar:
-    if os.path.exists("RP.png"):
-        st.image("RP.png", width=72)
-    st.markdown("## ⚙️ Settings")
-    st.caption("System-managed settings shown for reference.")
-    answer_lang = st.selectbox("Answer language", list({"English","Arabic"}), index=0)
-    college_filter = st.selectbox("College filter", sorted(KNOWN_COLLEGES), index=0)
-    st.text_input("Model", value=MODEL_NAME, disabled=True)
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.number_input("Retriever k", 1, 10, value=int(TOP_K), step=1, disabled=True)
-        debug = st.toggle("Debug mode (show KB & stats)", value=False)
-    with col_b:
-        st.slider("Temperature", 0.0, 1.5, value=float(TEMPERATURE), step=0.1, disabled=True)
-        st.number_input("Max tokens", 64, 4096, value=int(NUM_PREDICT), step=32, disabled=True)
-
-    # Appearance & avatar
-    st.divider()
-    st.markdown("## 🎨 Appearance")
-
-    if "profile_avatar_path" not in st.session_state:
-        st.session_state.profile_avatar_path = None
-    if "theme_primary" not in st.session_state:
-        st.session_state.theme_primary = "#4f46e5"
-    if "theme_bg" not in st.session_state:
-        st.session_state.theme_bg = "#0b1220"
-    if "theme_text" not in st.session_state:
-        st.session_state.theme_text = "#e2e8f0"
+def _render_appearance_controls():
+    avatar_path = st.session_state.get("profile_avatar_path")
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        primary = st.color_picker("Accent", st.session_state.theme_primary, key="pick_primary")
+        _primary = st.color_picker("Accent", st.session_state.get("theme_primary", "#4f46e5"), key="mini_pick_primary")
     with c2:
-        bg = st.color_picker("Background", st.session_state.theme_bg, key="pick_bg")
+        _bg = st.color_picker("Background", st.session_state.get("theme_bg", "#0b1220"), key="mini_pick_bg")
     with c3:
-        textc = st.color_picker("Text", st.session_state.theme_text, key="pick_text")
+        _textc = st.color_picker("Text", st.session_state.get("theme_text", "#e2e8f0"), key="mini_pick_text")
 
-    if primary != st.session_state.theme_primary or bg != st.session_state.theme_bg or textc != st.session_state.theme_text:
-        st.session_state.theme_primary = primary
-        st.session_state.theme_bg = bg
-        st.session_state.theme_text = textc
-
-    # Profile picture
-    pp = st.file_uploader("Profile picture", type=["png","jpg","jpeg","gif"], key="profile_pic_up")
-    if pp is not None:
+    _pp = st.file_uploader("Profile picture", type=["png","jpg","jpeg","gif"], key="mini_profile_pic_up")
+    if _pp is not None:
         try:
-            avatar_path = "user_avatar.png"
-            with open(avatar_path, "wb") as f:
-                f.write(pp.read())
-            st.session_state.profile_avatar_path = avatar_path
-            st.image(avatar_path, width=72, caption="Current profile")
+            _avatar_path = "user_avatar.png"
+            with open(_avatar_path, "wb") as f:
+                f.write(_pp.read())
+            st.session_state.profile_avatar_path = _avatar_path
+            avatar_path = _avatar_path
+            st.image(avatar_path, width=64, caption="Current profile")
         except Exception as e:
             st.warning(f"Could not save avatar: {e}")
-    elif st.session_state.profile_avatar_path and os.path.exists(st.session_state.profile_avatar_path):
-        st.image(st.session_state.profile_avatar_path, width=72, caption="Current profile")
+    elif avatar_path and os.path.exists(avatar_path):
+        st.image(avatar_path, width=64, caption="Current profile")
 
-    apply_theme(st.session_state.theme_primary, st.session_state.theme_bg, st.session_state.theme_text)
+    if (_primary != st.session_state.get("theme_primary")) or (_bg != st.session_state.get("theme_bg")) or (_textc != st.session_state.get("theme_text")):
+        st.session_state.theme_primary = _primary
+        st.session_state.theme_bg = _bg
+        st.session_state.theme_text = _textc
+        apply_theme(st.session_state.theme_primary, st.session_state.theme_bg, st.session_state.theme_text)
 
-    st.divider()
-    clear = st.button("🧹 Clear chat", use_container_width=True)
+# Apply current theme early
+apply_theme(st.session_state.get("theme_primary", "#4f46e5"),
+            st.session_state.get("theme_bg", "#0b1220"),
+            st.session_state.get("theme_text", "#e2e8f0"))
 
 # ---------------------- SESSION ----------------------
 if "messages" not in st.session_state:
@@ -820,7 +759,16 @@ if "user_name" not in st.session_state:
     st.session_state.user_name = None
 if "_splash_shown" not in st.session_state:
     st.session_state._splash_shown = False
-# schedule state
+if "profile_avatar_path" not in st.session_state:
+    st.session_state.profile_avatar_path = None
+
+if "theme_primary" not in st.session_state:
+    st.session_state.theme_primary = "#4f46e5"
+if "theme_bg" not in st.session_state:
+    st.session_state.theme_bg = "#0b1220"
+if "theme_text" not in st.session_state:
+    st.session_state.theme_text = "#e2e8f0"
+
 if "schedule_slots" not in st.session_state:
     st.session_state.schedule_slots = []
 if "schedule_planned_credits" not in st.session_state:
@@ -829,17 +777,17 @@ if "schedule_target_credits" not in st.session_state:
     st.session_state.schedule_target_credits = 15
 if "schedule_major_key" not in st.session_state:
     st.session_state.schedule_major_key = "CS"
-# persistent completed-course selections across filter changes
 if "completed_codes_all" not in st.session_state:
     st.session_state.completed_codes_all = set()
-# swap history (undo)
 if "swap_history" not in st.session_state:
     st.session_state.swap_history = []
+if "show_schedule" not in st.session_state:
+    st.session_state.show_schedule = False
+if "is_generating" not in st.session_state:
+    st.session_state.is_generating = False
 
 if not st.session_state._splash_shown:
     show_splash()
-if clear:
-    st.session_state.messages = []
 
 # ---------------------- DATA & INDEX ----------------------
 @st.cache_data(show_spinner=True, ttl=60)
@@ -864,12 +812,40 @@ def _build_or_load_index(csv_path: str, index_dir: str, force: bool) -> Tuple[Li
 
 status_col1, status_col2, status_col3 = st.columns([1.3, 1, 1])
 with status_col1:
-    st.title("🎓 AUIBPT — AUIB Course Chatbot")
+    st.title("AUIBPT — AUIB Course Chatbot")
 with status_col2:
     st.caption(f"Model: `{MODEL_NAME}` • k={TOP_K} • T={TEMPERATURE} • max={NUM_PREDICT}")
 with status_col3:
+    with st.expander("Appearance", expanded=False):
+        _render_appearance_controls()
+    with st.expander("Settings", expanded=False):
+        answer_lang = st.selectbox("Answer language", ["English","Arabic"], index=0)
+        debug = st.toggle("Debug", help="Show knowledge base and timing details")
+        # College filter
+        try:
+            colleges = sorted(list(KNOWN_COLLEGES))
+        except Exception:
+            colleges = []
+        options = ["All"] + colleges
+        if "college_filter" not in st.session_state:
+            st.session_state.college_filter = "All"
+        try:
+            _idx = options.index(st.session_state.college_filter)
+        except ValueError:
+            _idx = 0
+        college_filter = st.selectbox("College filter", options, index=_idx)
+        st.session_state.college_filter = college_filter
+
+    toggle_label = "Close Schedule Builder" if st.session_state.get("show_schedule", False) else "Open Schedule Builder"
+    cols_hdr = st.columns(2)
+    with cols_hdr[0]:
+        if st.button(toggle_label, key="toggle_schedule_hdr"):
+            st.session_state.show_schedule = not st.session_state.get("show_schedule", False)
+            st.rerun()
+    with cols_hdr[1]:
+        clear = st.button("Clear chat")
     exists = os.path.exists(CSV_PATH)
-    st.caption(f"CSV: {'✅ found' if exists else '❌ missing'}")
+    st.caption(f"CSV: {'found' if exists else 'missing'}")
 
 st.caption("Version 1.5 — AUIBPT (Ryunix Build)")
 st.divider()
@@ -877,6 +853,7 @@ st.divider()
 force_rebuild = st.checkbox("Rebuild FAISS index from CSV (one-time)", value=False)
 try:
     rows_all, vs, bm25 = _build_or_load_index(CSV_PATH, INDEX_DIR, force_rebuild)
+    college_filter = st.session_state.get("college_filter", "All")
     rows = filter_rows_by_college(rows_all, college_filter)
     retriever = vs.as_retriever(search_kwargs={"k": int(TOP_K)})
 except Exception as e:
@@ -885,24 +862,10 @@ except Exception as e:
 
 llm = make_llm(MODEL_NAME, TEMPERATURE, NUM_PREDICT)
 
-# Primary chains
 course_chain = ChatPromptTemplate.from_template(COURSE_PROMPT) | llm
 chat_chain   = ChatPromptTemplate.from_template(CHAT_PROMPT)   | llm
 univ_chain   = ChatPromptTemplate.from_template(UNIV_PROMPT)   | llm
 
-# Optional Groq fallback chains
-groq_fallback_course = groq_fallback_chat = groq_fallback_univ = None
-if GROQ_KEY:
-    try:
-        groq_llm = _make_groq_llm("llama-3.1-8b-instant", TEMPERATURE, NUM_PREDICT)
-        groq_fallback_course = ChatPromptTemplate.from_template(COURSE_PROMPT) | groq_llm
-        groq_fallback_chat   = ChatPromptTemplate.from_template(CHAT_PROMPT)   | groq_llm
-        groq_fallback_univ   = ChatPromptTemplate.from_template(UNIV_PROMPT)   | groq_llm
-    except Exception as e:
-        st.warning(f"Groq fallback unavailable: {e}")
-
-
-# Optional Groq fallback chains (used iff GROQ_KEY is present)
 groq_fallback_course = None
 groq_fallback_chat   = None
 groq_fallback_univ   = None
@@ -915,7 +878,6 @@ if GROQ_KEY:
     except Exception as e:
         st.warning(f"Groq fallback unavailable: {e}")
 
-
 # ---------------------- LIBERAL ARTS (rules) ----------------------
 LA_REQUIREMENTS = {
     "General": 1,
@@ -926,27 +888,32 @@ LA_REQUIREMENTS = {
     "NaturalScience": 2,
 }
 LA_CATEGORY = {
-    # General
     "UNI101": "General",
-    # Communication
     "ENL101": "Communication", "ENL201": "Communication", "ENL210": "Communication",
-    # Quantitative
     "CSC101": "Quantitative", "MAT101": "Quantitative",
-    # Humanities
     "HIS101": "Humanities", "HIS102": "Humanities", "HIS105": "Humanities",
     "HUM101": "Humanities", "LIT101": "Humanities", "PHA210": "Humanities",
     "PHI101": "Humanities", "POL125": "Humanities",
     "TLD100": "Humanities", "TLD101": "Humanities", "TLD102": "Humanities", "TLD103": "Humanities",
-    # Social Sciences
     "COM101": "SocialScience", "ECO101": "SocialScience", "FIN101": "SocialScience",
     "HCT108": "SocialScience", "MIS101": "SocialScience", "POL101": "SocialScience",
     "POL112": "SocialScience", "POL191": "SocialScience", "PSY101": "SocialScience",
     "SOC101": "SocialScience",
-    # Natural Sciences
     "CHE100": "NaturalScience", "ENV201": "NaturalScience", "GEO101": "NaturalScience",
     "PHY100": "NaturalScience", "PHY105": "NaturalScience",
 }
 LA_QUANT_BOTH = {"CSC101", "MAT101"}
+MAJOR_WEIGHT = 3
+LA_WEIGHT = 1
+
+DIFFICULTY_WEIGHT_MAP = {
+    "Easy":   (2.0, 1.0),
+    "Medium": (3.0, 1.0),
+    "Hard":   (4.0, 1.0),
+}
+
+def get_semester_weights(difficulty: str) -> tuple[float, float]:
+    return DIFFICULTY_WEIGHT_MAP.get(difficulty, DIFFICULTY_WEIGHT_MAP["Medium"])
 
 # ---------------------- PREREQS / CREDITS ----------------------
 def _parse_prereq_codes(prereq_text: str) -> List[str]:
@@ -1032,7 +999,6 @@ def _credits_completed(taken_codes: Set[str], rows_all: List[Dict]) -> int:
 
 # ---------------------- STUDENT PROFILE CONTEXT ----------------------
 def student_context_from_taken(rows_all: List[Dict], taken_codes: Set[str]) -> str:
-    """Build a compact profile string used inside LLM prompts."""
     if not taken_codes:
         return "Completed: (none)"
     idx = {r["code"].upper(): r for r in rows_all}
@@ -1047,60 +1013,124 @@ def student_context_from_taken(rows_all: List[Dict], taken_codes: Set[str]) -> s
     completed_credits = _credits_completed(taken_codes, rows_all)
     return "Completed (" + str(completed_credits) + " credits): " + "; ".join(items)
 
-# ---------------------- 🗓️ SCHEDULE BUILDER (+ swap) ----------------------
+# ----------------------  SCHEDULE BUILDER (+ swap) ----------------------
 def build_semester_schedule(
     major_key: str,
     target_credits: int,
     taken_codes: Set[str],
-    rows_all: List[Dict]
+    rows_all: List[Dict],
+    difficulty: str
 ) -> Tuple[List[Dict], Dict[str,int], Dict[str,int], int]:
-    """Build an initial schedule (list of rows) up to target_credits using LA first, then major."""
-    la_rows = rows_all
-    la_counts = la_completed_counts(taken_codes)
-    la_remain = la_remaining(la_counts, taken_codes)
-    la_pool = la_recommend_pool(taken_codes, la_rows, la_remain)
-    major_info = MAJOR_MAP[major_key]
-    major_pool = _eligible_major_rows(taken_codes, rows_all, major_info["prefixes"])
-
-    schedule: List[Dict] = []
     used_codes: Set[str] = set(c.upper() for c in taken_codes)
-    cur_credits = 0
+    code_to_row = {r["code"].upper(): r for r in rows_all}
 
-    def _credits_from_course(r: Dict) -> int:
+    la_counts = la_completed_counts(used_codes)
+    la_remain = la_remaining(la_counts, used_codes)
+    la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
+
+    la_flat: List[Tuple[str, Dict]] = []
+    for cat, lst in la_pool_by_cat.items():
+        for r in lst:
+            la_flat.append((cat, r))
+
+    major_info = MAJOR_MAP[major_key]
+    major_pool = _eligible_major_rows(used_codes, rows_all, major_info["prefixes"])
+
+    def cr_of(r: Dict) -> int:
         return _credits_from_str(r.get("credits"))
 
-    def try_add_course(r: Dict) -> bool:
+    schedule: List[Dict] = []
+    cur_credits = 0
+
+    def try_add_row(r: Dict, origin: str) -> bool:
         nonlocal cur_credits
-        code = r["code"].upper()
-        if code in used_codes: return False
-        cr = _credits_from_course(r)
-        if cur_credits + cr > target_credits: return False
-        schedule.append(r); used_codes.add(code); cur_credits += cr
+        cu = r["code"].upper()
+        if cu in used_codes:
+            return False
+        reqs = _parse_prereq_codes(r.get("prereqs",""))
+        if any(rc not in used_codes for rc in reqs):
+            return False
+        c = cr_of(r)
+        if cur_credits + c > target_credits:
+            return False
+        schedule.append(r)
+        used_codes.add(cu)
+        cur_credits += c
         return True
 
-    # Force-include Quantitative (CSC101/MAT101) if missing
-    for q_code in ["CSC101","MAT101"]:
-        if la_remain.get("Quantitative",0) > 0 and q_code not in used_codes:
-            r = next((x for x in rows_all if x["code"].upper()==q_code), None)
-            if r:
-                reqs = _parse_prereq_codes(r.get("prereqs",""))
-                if all(rc in used_codes for rc in reqs):
-                    try_add_course(r)
+    for q_code in ["CSC101", "MAT101"]:
+        if la_remain.get("Quantitative", 0) > 0 and q_code not in used_codes:
+            rq = code_to_row.get(q_code)
+            if rq and try_add_row(rq, origin="LA:Quantitative"):
+                la_counts = la_completed_counts(used_codes)
+                la_remain = la_remaining(la_counts, used_codes)
+                la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
+                la_flat = []
+                for cat, lst in la_pool_by_cat.items():
+                    for r in lst:
+                        la_flat.append((cat, r))
 
-    # Fill other LA categories by remaining need
-    cat_order = sorted(LA_REQUIREMENTS.keys(), key=lambda c: -la_remain.get(c,0))
-    for cat in cat_order:
-        need = la_remain.get(cat, 0)
-        if need <= 0: continue
-        for r in la_pool.get(cat, []):
-            if need <= 0: break
-            if try_add_course(r):
-                need -= 1
+    major_weight, la_weight = get_semester_weights(difficulty)
+    major_budget = major_weight
+    la_budget = la_weight
 
-    # Fill with major courses
-    for r in major_pool:
-        if cur_credits >= target_credits: break
-        try_add_course(r)
+    guard = 0
+    MAX_ITERS = 1000
+
+    while cur_credits < target_credits and guard < MAX_ITERS:
+        guard += 1
+
+        major_pool = [r for r in _eligible_major_rows(used_codes, rows_all, major_info["prefixes"])
+                      if r["code"].upper() not in used_codes]
+
+        la_counts = la_completed_counts(used_codes)
+        la_remain = la_remaining(la_counts, used_codes)
+        la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
+        la_flat = [(cat, r) for cat, lst in la_pool_by_cat.items() for r in lst
+                   if r["code"].upper() not in used_codes]
+
+        la_any_needed = any(v > 0 for v in la_remain.values())
+        picked = False
+
+        def pick_major_first() -> bool:
+            if not la_any_needed:
+                return True
+            if la_budget > 0 and la_flat:
+                return False
+            return True
+
+        try_major = pick_major_first()
+
+        for bucket in (["major", "la"] if try_major else ["la", "major"]):
+            if bucket == "major":
+                if major_budget <= 0 or not major_pool:
+                    continue
+                for r in major_pool:
+                    if try_add_row(r, origin="Major"):
+                        major_budget -= 1
+                        picked = True
+                        break
+                if picked:
+                    break
+            else:
+                if la_budget <= 0 or not la_flat:
+                    continue
+                for (cat, r) in la_flat:
+                    if la_remain.get(cat, 0) <= 0:
+                        continue
+                    if try_add_row(r, origin=f"LA:{cat}"):
+                        la_budget -= 1
+                        picked = True
+                        break
+                if picked:
+                    break
+
+        if not picked:
+            break
+
+        if major_budget <= 0 and la_budget <= 0:
+            major_budget = major_weight
+            la_budget = la_weight
 
     return schedule, la_counts, la_remain, cur_credits
 
@@ -1112,7 +1142,6 @@ def _rebuild_pools(major_key: str, taken_codes: Set[str], rows_all: List[Dict]) 
     return la_pool, major_pool
 
 def _export_schedule_csv(slots: List[Dict]) -> bytes:
-    """Create CSV bytes for current schedule slots."""
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["code", "title", "credits", "category", "prereqs"])
@@ -1146,17 +1175,15 @@ def import_schedule_json(payload_bytes):
                 cand_rows.append({"code":r["code"],"title":r["title"],"credits":r.get("credits"),"prereqs":r.get("prereqs")})
         if cand_rows:
             new_slots.append({
-    "id": f"import-{len(new_slots)}",
-    "origin": s["origin"],
-    "candidates": cand_rows,
-    "current_idx": int(s["current_idx"]),
-    "locked": bool(s.get("locked", False)),   # ✅ default lock state
-})
-
+                "id": f"import-{len(new_slots)}",
+                "origin": s["origin"],
+                "candidates": cand_rows,
+                "current_idx": int(s["current_idx"]),
+                "locked": bool(s.get("locked", False)),
+            })
     return new_slots
 
 def _auto_top_up(major_key: str, target_credits: int, taken_codes: Set[str], slots: List[Dict], rows_all: List[Dict]) -> None:
-    """Try to add eligible courses to reach target credits (without violating prereqs) by extending slots."""
     current_total = sum(_credits_from_str(s["candidates"][s["current_idx"]].get("credits")) for s in slots)
     if current_total >= target_credits:
         return
@@ -1170,13 +1197,12 @@ def _auto_top_up(major_key: str, target_credits: int, taken_codes: Set[str], slo
             cr = _credits_from_str(r.get("credits"))
             if current_total + cr <= target_credits:
                 slots.append({
-    "id": f"extra-{origin}-{len(slots)}",
-    "origin": origin,
-    "candidates": [r],
-    "current_idx": 0,
-    "locked": False,          # ✅ initialize here too
-})
-
+                    "id": f"extra-{origin}-{len(slots)}",
+                    "origin": origin,
+                    "candidates": [r],
+                    "current_idx": 0,
+                    "locked": False,
+                })
                 used.add(r["code"].upper())
                 current_total += cr
                 if current_total >= target_credits:
@@ -1200,15 +1226,38 @@ def _undo_swap():
         return True
     return False
 
-# ---------------------- UI: SCHEDULE BUILDER ----------------------
-with st.expander("🗓️ Schedule Builder — generate a full next-semester plan", expanded=True):
-    major_key = st.selectbox("Your major / program", ["CS", "Pharmacy", "Dentistry"], index=["CS","Pharmacy","Dentistry"].index(st.session_state.schedule_major_key))
+# ---------------------- SCHEDULE BUILDER (function) ----------------------
+def render_schedule_builder(rows_all, vs, bm25):
+    st.markdown("### Schedule Builder")
+    if "schedule_difficulty" not in st.session_state:
+        st.session_state.schedule_difficulty = "Medium"
+    difficulty_choice = st.radio(
+        "Semester difficulty",
+        options=["Easy", "Medium", "Hard"],
+        index=["Easy","Medium","Hard"].index(st.session_state.schedule_difficulty),
+        horizontal=True,
+        help=("Easy increases Liberal Arts weight. "
+              "Medium uses 3:1 (Major:Liberal). "
+              "Hard increases Major weight."),
+    )
+    st.session_state.schedule_difficulty = difficulty_choice
+
+    try:
+        options = list(MAJOR_MAP.keys())
+    except Exception:
+        options = ["CS"]
+    if not options:
+        options = ["CS"]
+    try:
+        default_idx = options.index(st.session_state.schedule_major_key) if "schedule_major_key" in st.session_state else 0
+    except ValueError:
+        default_idx = 0
+    major_key = st.selectbox("Major / program", options, index=default_idx)
     st.session_state.schedule_major_key = major_key
-    target_credits = st.slider("Target credits for next semester", 9, 21, st.session_state.schedule_target_credits, 1)
+    target_credits = st.slider("Target credits", 9, 21, st.session_state.schedule_target_credits, 1)
     st.session_state.schedule_target_credits = target_credits
 
-    # Picker scope: Major only / Liberal Arts only / Both
-    picker_scope = st.radio("Show in completed-courses picker:", ["Major only", "Liberal Arts only", "Both"], horizontal=True)
+    picker_scope = st.radio("Completed-course picker scope:", ["Major only", "Liberal Arts only", "Both"], horizontal=True)
 
     major_prefixes = MAJOR_MAP[major_key]["prefixes"]
     major_only_rows = [r for r in rows_all if r["code"].upper().startswith(major_prefixes)]
@@ -1234,25 +1283,27 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
     picked_labels = st.multiselect("I have completed:", labels, default=preselected_labels, key="completed_picker")
     picked_visible_codes = {label_to_code[lbl] for lbl in picked_labels}
 
-    # Persist: keep hidden selections + merge visible picks
     hidden_kept = st.session_state.completed_codes_all - visible_codes
     st.session_state.completed_codes_all = hidden_kept | picked_visible_codes
     taken_codes_all = set(st.session_state.completed_codes_all)
 
-    # Degree progress header
     completed_credits = _credits_completed(taken_codes_all, rows_all)
     degree_total = DEGREE_TOTAL[major_key]
-    st.caption(f"Progress: **{completed_credits}** / **{degree_total}** credits • Target this term: **{target_credits}**")
+    st.caption(f"Progress: {completed_credits} / {degree_total} credits • Target this term: {target_credits}")
 
-    col_build_a, col_build_b, col_build_c, col_build_d = st.columns([0.4,0.2,0.2,0.2])
+    col_build_a, col_build_b, col_build_c, col_build_d, col_build_e = st.columns([0.35,0.2,0.2,0.15,0.1])
     with col_build_a:
-        build_btn = st.button("🛠️ Build my schedule", use_container_width=True)
+        build_btn = st.button("Build schedule", use_container_width=True)
     with col_build_b:
-        reset_btn = st.button("♻️ Reset schedule", use_container_width=True)
+        reset_btn = st.button("Reset", use_container_width=True)
     with col_build_c:
-        topup_btn = st.button("⚡ Auto top-up", use_container_width=True, disabled=not st.session_state.schedule_slots)
+        topup_btn = st.button("Auto top-up", use_container_width=True, disabled=not st.session_state.schedule_slots)
     with col_build_d:
-        undo_btn = st.button("↩️ Undo last swap", use_container_width=True, disabled=not st.session_state.swap_history)
+        undo_btn = st.button("Undo swap", use_container_width=True, disabled=not st.session_state.swap_history)
+    with col_build_e:
+        if st.button("Close", use_container_width=True):
+            st.session_state.show_schedule = False
+            st.rerun()
 
     if reset_btn:
         st.session_state.schedule_slots = []
@@ -1264,7 +1315,8 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
             major_key=major_key,
             target_credits=target_credits,
             taken_codes=taken_codes_all,
-            rows_all=rows_all
+            rows_all=rows_all,
+            difficulty=st.session_state.get("schedule_difficulty", "Medium")
         )
         la_pool, major_pool = _rebuild_pools(major_key, taken_codes_all, rows_all)
 
@@ -1287,13 +1339,12 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
                     candidates.append(r); seen_codes.add(cu)
 
             slots.append({
-    "id": f"{origin}-{idx}",
-    "origin": origin,
-    "candidates": candidates,
-    "current_idx": 0,
-    "locked": False,          # ✅ initialize lock state
-})
-
+                "id": f"{origin}-{idx}",
+                "origin": origin,
+                "candidates": candidates,
+                "current_idx": 0,
+                "locked": False,
+            })
             used.add(c["code"].upper())
 
         st.session_state.schedule_slots = slots
@@ -1311,8 +1362,7 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
             st.info("Nothing to undo.")
 
     if st.session_state.schedule_slots:
-        st.markdown("### ✅ Suggested schedule")
-        remove_msgs = []
+        st.markdown("### Suggested schedule")
         new_total = 0
 
         for i, slot in enumerate(st.session_state.schedule_slots):
@@ -1322,36 +1372,34 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
 
             cols = st.columns([0.64, 0.12, 0.12, 0.12])
             with cols[0]:
-                lock_badge = "🔒" if slot.get("locked") else "🔓"
-                st.markdown(f"**{cur['code']} — {cur['title']}**  \nCategory: {slot['origin']} • Credits: {cr} • Prereqs: {pr}  \n{lock_badge} {'Locked' if slot.get('locked') else 'Unlocked'}")
+                st.markdown(f"**{cur['code']} — {cur['title']}**  \nCategory: {slot['origin']} • Credits: {cr} • Prereqs: {pr}  \nStatus: {'Locked' if slot.get('locked') else 'Unlocked'}")
                 why_bits = []
                 if cur["code"].upper() in LA_CATEGORY:
-                    why_bits.append(f"meets **{LA_CATEGORY[cur['code'].upper()]}**")
+                    why_bits.append(f"meets {LA_CATEGORY[cur['code'].upper()]}")
                 else:
                     why_bits.append("major requirement/elective")
                 reqs = _parse_prereq_codes(cur.get("prereqs",""))
                 if not reqs:
-                    why_bits.append("no explicit prereqs")
+                    why_bits.append("no explicit prerequisites")
                 else:
                     if all(rc in taken_codes_all for rc in reqs):
-                        why_bits.append("you satisfy prereqs")
+                        why_bits.append("prerequisites satisfied")
                     else:
-                        why_bits.append("prereqs satisfied during planning")
+                        why_bits.append("prerequisites satisfied during planning")
                 st.caption("Why this? " + " • ".join(why_bits))
 
             with cols[1]:
                 if st.button(
-    "❌ swap",
-    help="Replace with the next eligible option",
-    key=f"swap_{slot['id']}",
-    disabled=bool(slot.get("locked", False)),     # ✅ ensure a real bool
-):
-
+                    "Swap",
+                    help="Replace with the next eligible option",
+                    key=f"swap_{slot['id']}",
+                    disabled=bool(slot.get("locked", False)),
+                ):
                     current_used = {c["candidates"][c["current_idx"]]["code"].upper() for c in st.session_state.schedule_slots}
                     current_used.discard(cur["code"].upper())
 
                     replaced = False
-                    for j in range(slot["current_idx"] + 1, len(slot["candidates"])):
+                    for j in range(slot["current_idx"] + 1, len(slot["candidates"])):  # noqa: E741
                         cand = slot["candidates"][j]
                         code_u = cand["code"].upper()
                         if code_u in current_used or code_u in taken_codes_all:
@@ -1365,11 +1413,11 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
                             replaced = True
                             break
                     if not replaced:
-                        remove_msgs.append(f"No more eligible options left for **{cur['code']} — {cur['title']}** in {slot['origin']}.")
+                        st.info(f"No more eligible options left for {cur['code']} — {cur['title']} in {slot['origin']}.")
                     st.rerun()
 
             with cols[2]:
-                if st.button("🔒 lock" if not slot.get("locked") else "🔓 unlock", key=f"lock_{slot['id']}"):
+                if st.button("Lock" if not slot.get("locked") else "Unlock", key=f"lock_{slot['id']}"):
                     _toggle_lock(slot)
                     st.rerun()
             with cols[3]:
@@ -1378,13 +1426,13 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
             new_total += _credits_from_str(cur.get("credits"))
 
         st.session_state.schedule_planned_credits = new_total
-        st.success(f"Planned credits: **{new_total}** / Target **{st.session_state.schedule_target_credits}**")
+        st.success(f"Planned credits: {new_total} / Target {st.session_state.schedule_target_credits}")
 
         csv_bytes = _export_schedule_csv(st.session_state.schedule_slots)
-        st.download_button("📥 Export schedule as CSV", data=csv_bytes, file_name="schedule.csv", mime="text/csv")
+        st.download_button("Export schedule as CSV", data=csv_bytes, file_name="schedule.csv", mime="text/csv")
 
         json_bytes = export_schedule_json(st.session_state.schedule_slots)
-        st.download_button("💾 Save schedule (JSON)", data=json_bytes, file_name="schedule.json", mime="application/json")
+        st.download_button("Save schedule (JSON)", data=json_bytes, file_name="schedule.json", mime="application/json")
         up = st.file_uploader("Load a saved schedule (JSON)", type=["json"], key="sched_loader")
         if up is not None:
             try:
@@ -1392,17 +1440,17 @@ with st.expander("🗓️ Schedule Builder — generate a full next-semester pla
                 st.session_state.schedule_planned_credits = sum(_credits_from_str(s["candidates"][s["current_idx"]].get("credits")) for s in st.session_state.schedule_slots)
                 st.rerun()
             except Exception as e:
-                st.toast(f"Could not load schedule: {e}")
+                st.warning(f"Could not load schedule: {e}")
 
 # ---------------------- CHAT HISTORY RENDER ----------------------
 def render_history():
     assistant_avatar = "RP.png" if os.path.exists("RP.png") else None
     for m in st.session_state.messages:
         if m["role"] == "user":
-            with st.chat_message("user", avatar=st.session_state.profile_avatar_path or "👤"):
+            with st.chat_message("user", avatar=st.session_state.get("profile_avatar_path")):
                 st.markdown(m["content"])
         else:
-            with st.chat_message("assistant", avatar=assistant_avatar or "🤖"):
+            with st.chat_message("assistant", avatar=assistant_avatar or ""):
                 st.markdown(m["content"])
 
 render_history()
@@ -1411,14 +1459,23 @@ render_history()
 def _student_profile_for_prompt() -> str:
     return student_context_from_taken(rows_all, st.session_state.completed_codes_all)
 
-q = st.chat_input("Ask about AUIB, a professor, a course (e.g., 'what is CSC101?'), or just chat")
+input_disabled = st.session_state.get("is_generating", False)
+if st.session_state.get("is_generating", False):
+    st.info("Assistant is generating a response...")
+q = st.chat_input(
+    "Ask about AUIB, a professor, a course (e.g., 'what is CSC101?'), or just chat",
+    disabled=input_disabled
+)
+
 if q is None:
     pass
 elif not q.strip():
     st.warning("Please type a message first.")
 else:
+    st.session_state.is_generating = True
     start_ts = time.time()
-    with st.chat_message("user", avatar=st.session_state.profile_avatar_path or "👤"):
+
+    with st.chat_message("user", avatar=st.session_state.get("profile_avatar_path")):
         st.markdown(q)
     maybe_capture_name(q)
     st.session_state.messages.append({"role": "user", "content": q})
@@ -1428,30 +1485,29 @@ else:
     title_rows = find_rows_by_title(rows, q) if not direct_rows else []
     intent = parse_catalog_intent(q)
 
-    kb = ""; ans = None
+    kb = ""
+    ans = None
     history_text = build_history_text()
     student_context = _student_profile_for_prompt()
     answer_lang_str = LANG_OPTIONS.get(answer_lang, "English")
 
     assistant_avatar = "RP.png" if os.path.exists("RP.png") else None
-    with st.chat_message("assistant", avatar=assistant_avatar or "🤖"):
+    with st.chat_message("assistant", avatar=assistant_avatar or None):
         ans_placeholder = st.empty()
 
-        # ===== DECISION: which brain to use? =====
         if is_university_query(q):
             univ_kb_text = univ_kb_blocks_for(q) or "University facts: (none)\nFaculty: (none)"
             ans = ask_llm_stream(
-    univ_chain,
-    kb="",
-    history_text=history_text,
-    q=q,
-    answer_lang=answer_lang_str,
-    student_context=student_context,
-    placeholder=ans_placeholder,
-    univ_kb=univ_kb_text,
-    groq_fallback_chain=groq_fallback_univ,
-)
-
+                univ_chain,
+                kb="",
+                history_text=history_text,
+                q=q,
+                answer_lang=answer_lang_str,
+                student_context=student_context,
+                placeholder=ans_placeholder,
+                univ_kb=univ_kb_text,
+                groq_fallback_chain=groq_fallback_univ,
+            )
 
         elif direct_rows:
             if college_filter != "All":
@@ -1462,20 +1518,18 @@ else:
             if st.session_state.completed_codes_all:
                 kb += "\n---\n" + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
             ans = ask_llm_stream(
-    course_chain, kb, history_text, q, answer_lang_str, student_context,
-    ans_placeholder, groq_fallback_chain=groq_fallback_course
-)
-
+                course_chain, kb, history_text, q, answer_lang_str, student_context,
+                ans_placeholder, groq_fallback_chain=groq_fallback_course
+            )
 
         elif title_rows:
             kb = rows_to_kb(title_rows)
             if st.session_state.completed_codes_all:
                 kb += "\n---\n" + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
             ans = ask_llm_stream(
-    course_chain, kb, history_text, q, answer_lang_str, student_context,
-    ans_placeholder, groq_fallback_chain=groq_fallback_course
-)
-
+                course_chain, kb, history_text, q, answer_lang_str, student_context,
+                ans_placeholder, groq_fallback_chain=groq_fallback_course
+            )
 
         elif intent:
             if intent["type"] == "count":
@@ -1517,10 +1571,9 @@ else:
                     ans_placeholder.markdown("I don't know from the provided data."); ans = "I don't know from the provided data."
             else:
                 ans = ask_llm_stream(
-    chat_chain, "", history_text, q, answer_lang_str, student_context,
-    ans_placeholder, groq_fallback_chain=groq_fallback_chat
-)
-
+                    chat_chain, "", history_text, q, answer_lang_str, student_context,
+                    ans_placeholder, groq_fallback_chain=groq_fallback_chat
+                )
                 if st.session_state.get("user_name") and ans and not ans.lower().startswith(st.session_state["user_name"].lower()):
                     prefixed = friendly_prefix() + ans
                     ans_placeholder.markdown(prefixed); ans = prefixed
@@ -1535,6 +1588,19 @@ else:
             st.caption(f"Answered in {elapsed} • Model: {MODEL_NAME} • k={TOP_K} • T={TEMPERATURE}")
 
     st.session_state.messages.append({"role": "assistant", "content": ans})
+    st.session_state.is_generating = False
+
+# Clear chat action (after header button definition)
+try:
+    if clear:
+        st.session_state.messages = []
+        st.experimental_rerun()
+except NameError:
+    pass
+
+# ---------------------- SCHEDULE BUILDER (invoke below chat) ----------------------
+if st.session_state.get("show_schedule", False):
+    render_schedule_builder(rows_all, vs, bm25)
 
 # ---------------------- FOOTER ----------------------
 st.markdown(
@@ -1546,7 +1612,7 @@ st.markdown(
         margin-top:20px;
         padding-top:6px;
         border-top:1px solid rgba(255,255,255,0.1);
-    ">Ryunix Productions © 2025</div>
+    ">Ryunix Productions  2025</div>
     """,
     unsafe_allow_html=True
 )

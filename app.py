@@ -772,11 +772,11 @@ if "profile_avatar_path" not in st.session_state:
     st.session_state.profile_avatar_path = None
 
 if "theme_primary" not in st.session_state:
-    st.session_state.theme_primary = "#4f46e5"
+    st.session_state.theme_primary = "#4d1212"
 if "theme_bg" not in st.session_state:
-    st.session_state.theme_bg = "#0b1220"
+    st.session_state.theme_bg = "#000000"
 if "theme_text" not in st.session_state:
-    st.session_state.theme_text = "#e2e8f0"
+    st.session_state.theme_text = "#FFFFFF"
 
 if "schedule_slots" not in st.session_state:
     st.session_state.schedule_slots = []
@@ -821,7 +821,7 @@ def _build_or_load_index(csv_path: str, index_dir: str, force: bool) -> Tuple[Li
 
 status_col1, status_col2, status_col3 = st.columns([1.3, 1, 1])
 with status_col1:
-    st.title("AUIBPT — AUIB Course Chatbot")
+    st.title("AUIBPT — AUIB Course Chatbot",anchor=None,help=None,width="stretch")
 with status_col1:
     st.caption(f"Model: `{MODEL_NAME}` • k={TOP_K} • T={TEMPERATURE} • max={NUM_PREDICT}")
 with status_col3:
@@ -858,9 +858,8 @@ with status_col3:
 
 with status_col1:
     st.caption("BETA — AUIBPT (Ryunix Build)")
-st.divider()
-
-force_rebuild = st.checkbox("Rebuild FAISS index from CSV (one-time)", value=False)
+with status_col3:
+    force_rebuild = st.checkbox("Rebuild FAISS index from CSV (one-time)", value=False)
 try:
     rows_all, vs, bm25 = _build_or_load_index(CSV_PATH, INDEX_DIR, force_rebuild)
     college_filter = st.session_state.get("college_filter", "All")
@@ -1612,6 +1611,20 @@ except NameError:
 if st.session_state.get("show_schedule", False):
     render_schedule_builder(rows_all, vs, bm25)
 
+
+st.markdown("""
+<style>
+/* No extra gap below the chat input */
+div[data-testid="stChatInput"] { margin-bottom: 0 !important; }
+
+/* No extra bottom padding on the page */
+.main .block-container { padding-bottom: 0 !important; }
+
+/* Hide the custom footer if it still exists in the DOM */
+.custom-chat-footer { display: none !important; }
+</style>
+""", unsafe_allow_html=True)
+
 # ---------------------- FOOTER ----------------------
 st.markdown(
     """
@@ -1622,7 +1635,7 @@ st.markdown(
         margin-top:20px;
         padding-top:6px;
         border-top:1px solid rgba(255,255,255,0.1);
-    ">Ryunix Productions  2025</div>
+    "></div>
     """,
     unsafe_allow_html=True
 )

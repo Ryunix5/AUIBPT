@@ -179,3 +179,29 @@
 2025-10-20 23:15:16,818 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
 2025-10-20 23:15:20,038 [INFO] Loading faiss with AVX2 support.
 2025-10-20 23:15:20,056 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 23:31:46,018 [INFO] Use pytorch device_name: cpu
+2025-10-20 23:31:46,018 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 23:31:49,510 [INFO] Loading faiss with AVX2 support.
+2025-10-20 23:31:49,567 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 23:48:10,279 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:10,281 [INFO] Retrying request to /chat/completions in 0.449547 seconds
+2025-10-20 23:48:12,983 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:12,983 [INFO] Retrying request to /chat/completions in 0.958376 seconds
+2025-10-20 23:48:15,030 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:15,030 [INFO] Retrying request to /chat/completions in 1.628795 seconds
+2025-10-20 23:48:17,010 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:17,010 [INFO] Retrying request to /chat/completions in 3.357099 seconds
+2025-10-20 23:48:20,699 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:20,700 [INFO] Retrying request to /chat/completions in 6.561732 seconds
+2025-10-20 23:48:27,631 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:27,631 [INFO] Retrying request to /chat/completions in 7.235990 seconds
+2025-10-20 23:48:35,777 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:35,778 [INFO] Retrying request to /chat/completions in 6.582113 seconds
+2025-10-20 23:48:42,748 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:42,748 [INFO] Retrying request to /chat/completions in 7.245344 seconds
+2025-10-20 23:48:50,326 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-20 23:48:50,331 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-20 23:55:14,274 [INFO] Use pytorch device_name: cpu
+2025-10-20 23:55:14,275 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 23:55:18,042 [INFO] Loading faiss with AVX2 support.
+2025-10-20 23:55:18,129 [INFO] Successfully loaded faiss with AVX2 support.

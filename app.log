@@ -151,3 +151,31 @@
 2025-10-19 23:02:55,330 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
 2025-10-19 23:02:55,933 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
 2025-10-19 23:02:56,500 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-20 22:54:39,786 [INFO] Use pytorch device_name: cpu
+2025-10-20 22:54:39,786 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 22:54:45,092 [INFO] Loading faiss with AVX2 support.
+2025-10-20 22:54:45,236 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 22:55:40,552 [INFO] Use pytorch device_name: cpu
+2025-10-20 22:55:40,552 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 22:55:44,002 [INFO] Loading faiss with AVX2 support.
+2025-10-20 22:55:44,020 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 22:57:29,701 [INFO] Use pytorch device_name: cpu
+2025-10-20 22:57:29,701 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 22:57:33,173 [INFO] Loading faiss with AVX2 support.
+2025-10-20 22:57:33,186 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 23:02:52,466 [INFO] Use pytorch device_name: cpu
+2025-10-20 23:02:52,466 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 23:02:55,861 [INFO] Loading faiss with AVX2 support.
+2025-10-20 23:02:55,872 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 23:03:27,582 [INFO] Use pytorch device_name: cpu
+2025-10-20 23:03:27,582 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 23:03:31,000 [INFO] Loading faiss with AVX2 support.
+2025-10-20 23:03:31,017 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 23:05:20,237 [INFO] Use pytorch device_name: cpu
+2025-10-20 23:05:20,237 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 23:05:23,199 [INFO] Loading faiss with AVX2 support.
+2025-10-20 23:05:23,217 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-20 23:15:16,818 [INFO] Use pytorch device_name: cpu
+2025-10-20 23:15:16,818 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-20 23:15:20,038 [INFO] Loading faiss with AVX2 support.
+2025-10-20 23:15:20,056 [INFO] Successfully loaded faiss with AVX2 support.

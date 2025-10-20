@@ -58,7 +58,16 @@ except Exception:
 
 # ---------------------- UI CONFIG ----------------------
 page_icon = "RP.png" if os.path.exists("RP.png") else None
-st.set_page_config(page_title="AUIBPT • Course Chatbot", page_icon=page_icon, layout="wide")
+st.set_page_config(
+    page_title="AUIBPT",
+    page_icon=page_icon,
+    layout="wide",
+    menu_items={
+        "About": "AUIBPT v1.5 — Course & Schedule assistant for AUIB.",
+        "Get Help": "mailto:ali.1241375@auib.edu.iq",
+        "Report a bug": "mailto:ali.1241375@auib.edu.iq",
+    }
+)
 
 # Hide sidebar; widen main
 st.markdown(
@@ -813,7 +822,7 @@ def _build_or_load_index(csv_path: str, index_dir: str, force: bool) -> Tuple[Li
 status_col1, status_col2, status_col3 = st.columns([1.3, 1, 1])
 with status_col1:
     st.title("AUIBPT — AUIB Course Chatbot")
-with status_col2:
+with status_col1:
     st.caption(f"Model: `{MODEL_NAME}` • k={TOP_K} • T={TEMPERATURE} • max={NUM_PREDICT}")
 with status_col3:
     with st.expander("Appearance", expanded=False):
@@ -847,7 +856,8 @@ with status_col3:
     exists = os.path.exists(CSV_PATH)
     st.caption(f"CSV: {'found' if exists else 'missing'}")
 
-st.caption("Version 1.5 — AUIBPT (Ryunix Build)")
+with status_col1:
+    st.caption("BETA — AUIBPT (Ryunix Build)")
 st.divider()
 
 force_rebuild = st.checkbox("Rebuild FAISS index from CSV (one-time)", value=False)
@@ -1463,7 +1473,7 @@ input_disabled = st.session_state.get("is_generating", False)
 if st.session_state.get("is_generating", False):
     st.info("Assistant is generating a response...")
 q = st.chat_input(
-    "Ask about AUIB, a professor, a course (e.g., 'what is CSC101?'), or just chat",
+    "Ask anything",
     disabled=input_disabled
 )
 

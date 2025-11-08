@@ -590,7 +590,7 @@ def show_splash():
 
 
 if "theme_primary" not in st.session_state: st.session_state.theme_primary = "#4d1212"
-if "theme_bg" not in st.session_state:      st.session_state.theme_bg = "#0b1220"
+if "theme_bg" not in st.session_state:      st.session_state.theme_bg = "#000000"
 if "theme_text" not in st.session_state:    st.session_state.theme_text = "#e2e8f0"
 apply_theme(st.session_state.theme_primary, st.session_state.theme_bg, st.session_state.theme_text)
 

@@ -773,3 +773,7 @@
 2025-11-08 22:12:21,305 [INFO] Retrying request to /chat/completions in 7.779143 seconds
 2025-11-08 22:12:29,468 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
 2025-11-08 22:12:30,047 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 22:18:27,197 [INFO] Use pytorch device_name: cpu
+2025-11-08 22:18:27,201 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-08 22:18:30,961 [INFO] Loading faiss with AVX2 support.
+2025-11-08 22:18:31,032 [INFO] Successfully loaded faiss with AVX2 support.

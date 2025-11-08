@@ -807,3 +807,7 @@
 2025-11-08 23:05:18,960 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2025-11-08 23:05:23,242 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2025-11-08 23:05:32,805 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:07:51,568 [INFO] Use pytorch device_name: cpu
+2025-11-08 23:07:51,569 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-08 23:07:55,098 [INFO] Loading faiss with AVX2 support.
+2025-11-08 23:07:55,112 [INFO] Successfully loaded faiss with AVX2 support.

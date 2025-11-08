@@ -30,8 +30,73 @@ from langchain_core.callbacks import BaseCallbackHandler
 from ui import apply_theme, render_appearance_controls
 from data_io import build_or_load_index  
 from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT, USE_OPENAI
+from collections import OrderedDict
+from settings import USE_GROQ_ONLY
 
+def _qa_cache_get(q: str):
+    key = (q or "").strip().lower()
+    cache = st.session_state.setdefault("_qa_cache", OrderedDict())
+    if key in cache:
+        # move to end (LRU)
+        cache.move_to_end(key)
+        return cache[key]
+    return None
 
+def _qa_cache_put(q: str, a: str, cap: int = 64):
+    key = (q or "").strip().lower()
+    cache = st.session_state.setdefault("_qa_cache", OrderedDict())
+    cache[key] = a
+    cache.move_to_end(key)
+    while len(cache) > cap:
+        cache.popitem(last=False)
+
+TOP_K = 3                 
+CHUNK_CHAR_CAP = 900     
+HISTORY_TURNS = 6  
+_CODE_RE = re.compile(r"^[A-Za-z]{2,5}\s?\d{3}$")  # e.g., CSC101 or CSC 101
+
+def _trim(s, n):
+    s = (s or "").strip()
+    return (s[:n] + "…") if len(s) > n else s
+
+def prepare_history_text(messages, n_pairs=HISTORY_TURNS):
+    """Keep only the last n_pairs (user) turns when building history text."""
+    out, user_seen = [], 0
+    for m in reversed(messages or []):
+        out.append(m)
+        if m.get("role") == "user":
+            user_seen += 1
+            if user_seen >= n_pairs:
+                break
+    out.reverse()
+    return "\n".join(
+        f"{m['role']}: {m.get('content','')}"
+        for m in out if m.get("content")
+    )
+
+def fastpath_course_code(q, rows):
+    """If prompt looks like a course code, answer directly from CSV (skip model)."""
+    if not q or not _CODE_RE.match(q.strip()):
+        return None
+    key = re.sub(r"\s+", "", q).upper()
+    for r in rows or []:
+        code = re.sub(r"\s+", "", str(r.get("code",""))).upper()
+        if code == key:
+            title = (r.get("title") or "").strip()
+            desc  = (r.get("description") or "").strip()
+            return f"**{r.get('code','')} — {title}**\n\n{desc}"
+    return None
+
+def build_kb_from_docs(semantic_docs, bm25_docs, top_k=TOP_K, cap=CHUNK_CHAR_CAP):
+    """Combine top docs from both retrievers and trim."""
+    docs = []
+    if semantic_docs: docs.extend(semantic_docs)
+    if bm25_docs:     docs.extend(bm25_docs)
+    docs = docs[:top_k]
+    return "\n\n".join(
+        f"[{i+1}] {_trim(getattr(d,'page_content',str(d)), cap)}"
+        for i, d in enumerate(docs)
+    )
 # --- Secrets / keys (env + streamlit secrets) ---
 def _get_secret(key: str) -> str | None:
     val = os.getenv(key)
@@ -327,6 +392,8 @@ def build_history_text(max_turns: int = 10) -> str:
     for m in msgs:
         role = "User" if m["role"] == "user" else "AI"
         lines.append(f"{role}: {m['content']}")
+    hist_msgs_text = prepare_history_text(st.session_state.get("messages", []), n_pairs=HISTORY_TURNS)
+    history_text = hist_msgs_text
     return "\n".join(lines)
 
 def find_rows_by_code(rows: List[Dict], q: str) -> List[Dict]:
@@ -523,6 +590,8 @@ def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, 
         "answer_lang": answer_lang,
         "student_context": student_context
     }
+    if USE_GROQ_ONLY and groq_fallback_chain is not None:
+        chain, groq_fallback_chain = groq_fallback_chain, None
 
     def _invoke(c, stream=True):
         if stream:
@@ -1310,7 +1379,12 @@ q = st.chat_input(
     "Ask anything",
     disabled=input_disabled
 )
-
+hit = fastpath_course_code(q, rows_all)  
+if hit:
+    with st.chat_message("assistant"):
+        st.markdown(hit)
+    st.session_state.messages.append({"role": "assistant", "content": hit})
+    st.stop()  
 if q is None:
     pass
 elif not q.strip():
@@ -1405,8 +1479,14 @@ else:
                     docs = hybrid_retrieve(qx, retriever, vs, int(TOP_K), bm25=bm25)
                 except Exception as e:
                     log.error(f"hybrid_retrieve error: {e}"); docs = []
-                docs = reorder_docs_by_scopes(docs, scopes, college_filter)
-                kb = prepare_kb_from_docs(docs)
+                    docs = reorder_docs_by_scopes(docs, scopes, college_filter)
+
+                    
+                    tokens = (q or "").strip().split()
+                    use_bm25 = len(tokens) >= 3  # skip BM25 on very short queries
+                    if not use_bm25:
+                       bm25_docs = []
+                kb = build_kb_from_docs(docs, bm25_docs if use_bm25 else [], top_k=TOP_K, cap=CHUNK_CHAR_CAP)
                 if st.session_state.completed_codes_all:
                     kb += ("\n---\n" if kb else "") + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
                 if kb and kb != "(no relevant context found)":

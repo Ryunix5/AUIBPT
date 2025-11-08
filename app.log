@@ -777,3 +777,33 @@
 2025-11-08 22:18:27,201 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
 2025-11-08 22:18:30,961 [INFO] Loading faiss with AVX2 support.
 2025-11-08 22:18:31,032 [INFO] Successfully loaded faiss with AVX2 support.
+2025-11-08 22:51:16,304 [INFO] Use pytorch device_name: cpu
+2025-11-08 22:51:16,305 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-08 22:51:19,724 [INFO] Loading faiss with AVX2 support.
+2025-11-08 22:51:19,767 [INFO] Successfully loaded faiss with AVX2 support.
+2025-11-08 22:51:48,582 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:51:48,584 [INFO] Retrying request to /chat/completions in 0.448862 seconds
+2025-11-08 22:51:49,430 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:51:49,430 [INFO] Retrying request to /chat/completions in 0.871104 seconds
+2025-11-08 22:51:50,864 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:51:50,864 [INFO] Retrying request to /chat/completions in 1.547698 seconds
+2025-11-08 22:51:52,885 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:51:52,885 [INFO] Retrying request to /chat/completions in 3.744572 seconds
+2025-11-08 22:51:57,880 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:51:57,881 [INFO] Retrying request to /chat/completions in 7.531586 seconds
+2025-11-08 22:52:05,800 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:52:05,800 [INFO] Retrying request to /chat/completions in 6.819991 seconds
+2025-11-08 22:52:12,949 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:52:12,949 [INFO] Retrying request to /chat/completions in 7.712678 seconds
+2025-11-08 22:52:21,596 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:52:21,597 [INFO] Retrying request to /chat/completions in 7.827169 seconds
+2025-11-08 22:52:29,975 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:52:30,702 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:04:59,241 [INFO] Use pytorch device_name: cpu
+2025-11-08 23:04:59,241 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-08 23:05:05,330 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:05:08,984 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:05:15,938 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:05:18,960 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:05:23,242 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-11-08 23:05:32,805 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

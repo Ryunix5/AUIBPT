@@ -30,10 +30,10 @@ def render_appearance_controls():
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        _primary = st.color_picker("Accent", st.session_state.get("theme_primary", "#4f46e5"),
+        _primary = st.color_picker("Accent", st.session_state.get("theme_primary", "#700000"),
                                    key="mini_pick_primary")
     with c2:
-        _bg = st.color_picker("Background", st.session_state.get("theme_bg", "#0b1220"),
+        _bg = st.color_picker("Background", st.session_state.get("theme_bg", "#000000"),
                               key="mini_pick_bg")
     with c3:
         _textc = st.color_picker("Text", st.session_state.get("theme_text", "#e2e8f0"),

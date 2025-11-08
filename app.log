@@ -205,3 +205,571 @@
 2025-10-20 23:55:14,275 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
 2025-10-20 23:55:18,042 [INFO] Loading faiss with AVX2 support.
 2025-10-20 23:55:18,129 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-22 21:44:05,917 [INFO] Use pytorch device_name: cpu
+2025-10-22 21:44:05,917 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-22 21:44:11,462 [INFO] Loading faiss with AVX2 support.
+2025-10-22 21:44:11,660 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-22 21:45:01,502 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:01,504 [INFO] Retrying request to /chat/completions in 0.441630 seconds
+2025-10-22 21:45:04,010 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:04,011 [INFO] Retrying request to /chat/completions in 0.813513 seconds
+2025-10-22 21:45:06,710 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:06,711 [INFO] Retrying request to /chat/completions in 1.701852 seconds
+2025-10-22 21:45:08,816 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:08,816 [INFO] Retrying request to /chat/completions in 3.491302 seconds
+2025-10-22 21:45:13,282 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:13,282 [INFO] Retrying request to /chat/completions in 7.329467 seconds
+2025-10-22 21:45:21,661 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:21,661 [INFO] Retrying request to /chat/completions in 6.939561 seconds
+2025-10-22 21:45:28,987 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:28,988 [INFO] Retrying request to /chat/completions in 6.026729 seconds
+2025-10-22 21:45:35,344 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:35,344 [INFO] Retrying request to /chat/completions in 7.877951 seconds
+2025-10-22 21:45:44,358 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 21:45:44,929 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-22 23:47:17,259 [INFO] Use pytorch device_name: cpu
+2025-10-22 23:47:17,259 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-22 23:47:22,570 [INFO] Loading faiss with AVX2 support.
+2025-10-22 23:47:22,730 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-22 23:47:48,744 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:47:48,745 [INFO] Retrying request to /chat/completions in 0.377254 seconds
+2025-10-22 23:47:49,684 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:47:49,685 [INFO] Retrying request to /chat/completions in 0.871899 seconds
+2025-10-22 23:47:50,991 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:47:50,992 [INFO] Retrying request to /chat/completions in 1.618117 seconds
+2025-10-22 23:47:53,137 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:47:53,138 [INFO] Retrying request to /chat/completions in 3.319722 seconds
+2025-10-22 23:47:56,977 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:47:56,977 [INFO] Retrying request to /chat/completions in 6.072770 seconds
+2025-10-22 23:48:03,377 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:48:03,377 [INFO] Retrying request to /chat/completions in 7.794898 seconds
+2025-10-22 23:48:11,639 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:48:11,639 [INFO] Retrying request to /chat/completions in 7.855793 seconds
+2025-10-22 23:48:21,037 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-22 23:48:21,038 [INFO] Retrying request to /chat/completions in 7.060492 seconds
+2025-10-23 03:36:21,491 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:23:04,406 [INFO] Use pytorch device_name: cpu
+2025-10-24 00:23:04,407 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-24 00:23:07,654 [INFO] Loading faiss with AVX2 support.
+2025-10-24 00:23:07,801 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-24 00:28:40,816 [INFO] Use pytorch device_name: cpu
+2025-10-24 00:28:40,816 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-24 00:40:32,857 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:32,859 [INFO] Retrying request to /chat/completions in 0.474652 seconds
+2025-10-24 00:40:34,372 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:34,372 [INFO] Retrying request to /chat/completions in 0.925823 seconds
+2025-10-24 00:40:36,251 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:36,251 [INFO] Retrying request to /chat/completions in 1.627317 seconds
+2025-10-24 00:40:39,636 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:39,636 [INFO] Retrying request to /chat/completions in 3.886375 seconds
+2025-10-24 00:40:45,094 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:45,095 [INFO] Retrying request to /chat/completions in 6.675610 seconds
+2025-10-24 00:40:52,917 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:52,917 [INFO] Retrying request to /chat/completions in 6.267352 seconds
+2025-10-24 00:40:59,591 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:40:59,591 [INFO] Retrying request to /chat/completions in 7.366102 seconds
+2025-10-24 00:41:08,200 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:41:08,200 [INFO] Retrying request to /chat/completions in 7.961166 seconds
+2025-10-24 00:41:16,589 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 00:41:17,258 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 22:37:36,010 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:37:36,010 [INFO] Retrying request to /chat/completions in 0.467740 seconds
+2025-10-24 22:37:36,926 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:37:36,927 [INFO] Retrying request to /chat/completions in 0.963033 seconds
+2025-10-24 22:37:39,158 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:37:39,159 [INFO] Retrying request to /chat/completions in 1.611072 seconds
+2025-10-24 22:37:41,373 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:37:41,373 [INFO] Retrying request to /chat/completions in 3.537736 seconds
+2025-10-24 22:37:45,267 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:37:45,268 [INFO] Retrying request to /chat/completions in 6.014788 seconds
+2025-10-24 22:37:52,049 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:37:52,049 [INFO] Retrying request to /chat/completions in 6.900577 seconds
+2025-10-24 22:38:02,346 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:38:02,346 [INFO] Retrying request to /chat/completions in 7.152985 seconds
+2025-10-24 22:38:09,890 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:38:09,891 [INFO] Retrying request to /chat/completions in 7.467635 seconds
+2025-10-24 22:49:36,228 [INFO] Use pytorch device_name: cpu
+2025-10-24 22:49:36,229 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-24 22:49:45,288 [INFO] Loading faiss with AVX2 support.
+2025-10-24 22:49:45,432 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-24 22:50:23,824 [INFO] Use pytorch device_name: cpu
+2025-10-24 22:50:23,824 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-24 22:50:27,250 [INFO] Loading faiss with AVX2 support.
+2025-10-24 22:50:27,263 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-24 22:50:40,479 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:50:40,480 [INFO] Retrying request to /chat/completions in 0.455543 seconds
+2025-10-24 22:50:41,282 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:50:41,282 [INFO] Retrying request to /chat/completions in 0.904060 seconds
+2025-10-24 22:50:42,577 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:50:42,577 [INFO] Retrying request to /chat/completions in 1.784115 seconds
+2025-10-24 22:50:44,922 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:50:44,922 [INFO] Retrying request to /chat/completions in 3.941501 seconds
+2025-10-24 22:50:49,381 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:50:49,382 [INFO] Retrying request to /chat/completions in 6.489710 seconds
+2025-10-24 22:50:56,470 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:50:56,470 [INFO] Retrying request to /chat/completions in 7.135665 seconds
+2025-10-24 22:51:03,993 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:51:03,993 [INFO] Retrying request to /chat/completions in 6.917006 seconds
+2025-10-24 22:51:11,298 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:51:11,298 [INFO] Retrying request to /chat/completions in 7.180998 seconds
+2025-10-24 22:51:19,625 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:51:20,524 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 22:52:00,583 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:00,584 [INFO] Retrying request to /chat/completions in 0.400022 seconds
+2025-10-24 22:52:02,007 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:02,008 [INFO] Retrying request to /chat/completions in 0.867443 seconds
+2025-10-24 22:52:03,300 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:03,301 [INFO] Retrying request to /chat/completions in 1.878191 seconds
+2025-10-24 22:52:05,613 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:05,613 [INFO] Retrying request to /chat/completions in 3.195036 seconds
+2025-10-24 22:52:09,304 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:09,304 [INFO] Retrying request to /chat/completions in 7.628545 seconds
+2025-10-24 22:52:18,181 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:18,181 [INFO] Retrying request to /chat/completions in 6.763164 seconds
+2025-10-24 22:52:25,343 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:25,344 [INFO] Retrying request to /chat/completions in 7.614816 seconds
+2025-10-24 22:52:33,362 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:33,362 [INFO] Retrying request to /chat/completions in 7.216873 seconds
+2025-10-24 22:52:40,933 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:52:41,342 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 22:53:35,836 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:35,836 [INFO] Retrying request to /chat/completions in 0.404853 seconds
+2025-10-24 22:53:36,772 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:36,772 [INFO] Retrying request to /chat/completions in 0.903470 seconds
+2025-10-24 22:53:38,079 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:38,079 [INFO] Retrying request to /chat/completions in 1.951863 seconds
+2025-10-24 22:53:40,364 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:40,364 [INFO] Retrying request to /chat/completions in 3.038826 seconds
+2025-10-24 22:53:43,802 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:43,803 [INFO] Retrying request to /chat/completions in 7.321380 seconds
+2025-10-24 22:53:51,673 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:51,673 [INFO] Retrying request to /chat/completions in 6.608048 seconds
+2025-10-24 22:53:58,734 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:53:58,734 [INFO] Retrying request to /chat/completions in 7.647379 seconds
+2025-10-24 22:54:06,795 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:54:06,796 [INFO] Retrying request to /chat/completions in 6.037727 seconds
+2025-10-24 22:54:13,223 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-24 22:54:13,974 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-24 23:20:28,905 [INFO] Use pytorch device_name: cpu
+2025-10-24 23:20:28,905 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:08:35,736 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:08:35,736 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:08:39,768 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:08:39,768 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:08:40,223 [INFO] Loading faiss with AVX2 support.
+2025-10-25 13:08:40,439 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 13:09:08,477 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:09:08,477 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:10:18,951 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:10:18,951 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:10:21,928 [INFO] Loading faiss with AVX2 support.
+2025-10-25 13:10:21,940 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 13:10:53,108 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:10:53,108 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:11:16,110 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:11:16,110 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:11:53,386 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:11:53,386 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:11:56,593 [INFO] Loading faiss with AVX2 support.
+2025-10-25 13:11:56,605 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 13:15:17,171 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:15:17,171 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:15:20,793 [INFO] Loading faiss with AVX2 support.
+2025-10-25 13:15:20,808 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 13:18:42,777 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:18:42,777 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:18:46,075 [INFO] Loading faiss with AVX2 support.
+2025-10-25 13:18:46,095 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 13:18:58,451 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:18:58,452 [INFO] Retrying request to /chat/completions in 0.453244 seconds
+2025-10-25 13:18:59,254 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:18:59,254 [INFO] Retrying request to /chat/completions in 0.868459 seconds
+2025-10-25 13:19:01,238 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:01,238 [INFO] Retrying request to /chat/completions in 1.764210 seconds
+2025-10-25 13:19:03,835 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:03,835 [INFO] Retrying request to /chat/completions in 3.330602 seconds
+2025-10-25 13:19:07,501 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:07,501 [INFO] Retrying request to /chat/completions in 7.323383 seconds
+2025-10-25 13:19:15,807 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:15,807 [INFO] Retrying request to /chat/completions in 6.711546 seconds
+2025-10-25 13:19:23,724 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:23,724 [INFO] Retrying request to /chat/completions in 7.926981 seconds
+2025-10-25 13:19:32,088 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:32,088 [INFO] Retrying request to /chat/completions in 6.775805 seconds
+2025-10-25 13:19:39,914 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:19:40,753 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-25 13:20:27,859 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:27,859 [INFO] Retrying request to /chat/completions in 0.451944 seconds
+2025-10-25 13:20:28,746 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:28,746 [INFO] Retrying request to /chat/completions in 0.804230 seconds
+2025-10-25 13:20:29,979 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:29,980 [INFO] Retrying request to /chat/completions in 1.634309 seconds
+2025-10-25 13:20:32,075 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:32,076 [INFO] Retrying request to /chat/completions in 3.379485 seconds
+2025-10-25 13:20:35,876 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:35,877 [INFO] Retrying request to /chat/completions in 6.503540 seconds
+2025-10-25 13:20:42,783 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:42,783 [INFO] Retrying request to /chat/completions in 6.342305 seconds
+2025-10-25 13:20:49,492 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:49,492 [INFO] Retrying request to /chat/completions in 6.397922 seconds
+2025-10-25 13:20:56,257 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:20:56,257 [INFO] Retrying request to /chat/completions in 7.725687 seconds
+2025-10-25 13:21:04,413 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:21:04,413 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:22:24,935 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:24,935 [INFO] Retrying request to /chat/completions in 0.420483 seconds
+2025-10-25 13:22:26,514 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:26,514 [INFO] Retrying request to /chat/completions in 0.839344 seconds
+2025-10-25 13:22:27,692 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:27,692 [INFO] Retrying request to /chat/completions in 1.990545 seconds
+2025-10-25 13:22:30,372 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:30,373 [INFO] Retrying request to /chat/completions in 3.877593 seconds
+2025-10-25 13:22:34,605 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:34,605 [INFO] Retrying request to /chat/completions in 6.988805 seconds
+2025-10-25 13:22:42,064 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:42,065 [INFO] Retrying request to /chat/completions in 6.885732 seconds
+2025-10-25 13:22:49,425 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:49,426 [INFO] Retrying request to /chat/completions in 7.039973 seconds
+2025-10-25 13:22:56,884 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:22:56,885 [INFO] Retrying request to /chat/completions in 7.763674 seconds
+2025-10-25 13:23:05,014 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:23:05,014 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:24:49,887 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:24:49,887 [INFO] Retrying request to /chat/completions in 0.446314 seconds
+2025-10-25 13:24:50,768 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:24:50,769 [INFO] Retrying request to /chat/completions in 0.988536 seconds
+2025-10-25 13:24:52,172 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:24:52,172 [INFO] Retrying request to /chat/completions in 1.654533 seconds
+2025-10-25 13:24:54,188 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:24:54,189 [INFO] Retrying request to /chat/completions in 3.947264 seconds
+2025-10-25 13:24:58,494 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:24:58,494 [INFO] Retrying request to /chat/completions in 6.778499 seconds
+2025-10-25 13:25:06,496 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:06,496 [INFO] Retrying request to /chat/completions in 6.821065 seconds
+2025-10-25 13:25:13,771 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:13,771 [INFO] Retrying request to /chat/completions in 6.968187 seconds
+2025-10-25 13:25:21,230 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:21,230 [INFO] Retrying request to /chat/completions in 7.959586 seconds
+2025-10-25 13:25:30,729 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:30,729 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:25:40,310 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:40,310 [INFO] Retrying request to /chat/completions in 0.457660 seconds
+2025-10-25 13:25:41,136 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:41,136 [INFO] Retrying request to /chat/completions in 0.786905 seconds
+2025-10-25 13:25:42,332 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:42,332 [INFO] Retrying request to /chat/completions in 1.627027 seconds
+2025-10-25 13:25:44,395 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:44,395 [INFO] Retrying request to /chat/completions in 3.693375 seconds
+2025-10-25 13:25:48,623 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:48,623 [INFO] Retrying request to /chat/completions in 6.730105 seconds
+2025-10-25 13:25:55,771 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:25:55,771 [INFO] Retrying request to /chat/completions in 6.858224 seconds
+2025-10-25 13:26:02,986 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:02,986 [INFO] Retrying request to /chat/completions in 7.831687 seconds
+2025-10-25 13:26:11,196 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:11,196 [INFO] Retrying request to /chat/completions in 7.059446 seconds
+2025-10-25 13:26:18,682 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:19,055 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-25 13:26:53,326 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:53,327 [INFO] Retrying request to /chat/completions in 0.439728 seconds
+2025-10-25 13:26:54,197 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:54,197 [INFO] Retrying request to /chat/completions in 0.818472 seconds
+2025-10-25 13:26:55,379 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:55,379 [INFO] Retrying request to /chat/completions in 1.931314 seconds
+2025-10-25 13:26:57,782 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:26:57,782 [INFO] Retrying request to /chat/completions in 3.180671 seconds
+2025-10-25 13:27:01,302 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:01,302 [INFO] Retrying request to /chat/completions in 7.835821 seconds
+2025-10-25 13:27:09,566 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:09,567 [INFO] Retrying request to /chat/completions in 7.471987 seconds
+2025-10-25 13:27:17,422 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:17,422 [INFO] Retrying request to /chat/completions in 7.003286 seconds
+2025-10-25 13:27:24,914 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:24,914 [INFO] Retrying request to /chat/completions in 7.044204 seconds
+2025-10-25 13:27:32,311 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:32,311 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:27:36,958 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:36,958 [INFO] Retrying request to /chat/completions in 0.424202 seconds
+2025-10-25 13:27:37,808 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:37,808 [INFO] Retrying request to /chat/completions in 0.844721 seconds
+2025-10-25 13:27:39,063 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:39,064 [INFO] Retrying request to /chat/completions in 1.949467 seconds
+2025-10-25 13:27:41,368 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:41,368 [INFO] Retrying request to /chat/completions in 3.049168 seconds
+2025-10-25 13:27:44,823 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:44,823 [INFO] Retrying request to /chat/completions in 6.720699 seconds
+2025-10-25 13:27:51,898 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:51,898 [INFO] Retrying request to /chat/completions in 7.093197 seconds
+2025-10-25 13:27:59,374 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:27:59,374 [INFO] Retrying request to /chat/completions in 7.692298 seconds
+2025-10-25 13:28:07,401 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:07,401 [INFO] Retrying request to /chat/completions in 7.601043 seconds
+2025-10-25 13:28:15,382 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:16,002 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:16,002 [INFO] Retrying request to /chat/completions in 0.440690 seconds
+2025-10-25 13:28:16,679 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:16,679 [INFO] Retrying request to /chat/completions in 0.836484 seconds
+2025-10-25 13:28:18,213 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:18,214 [INFO] Retrying request to /chat/completions in 1.874349 seconds
+2025-10-25 13:28:20,500 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:20,501 [INFO] Retrying request to /chat/completions in 3.842851 seconds
+2025-10-25 13:28:24,766 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:24,768 [INFO] Retrying request to /chat/completions in 6.292134 seconds
+2025-10-25 13:28:31,442 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:31,443 [INFO] Retrying request to /chat/completions in 7.692942 seconds
+2025-10-25 13:28:39,568 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:39,568 [INFO] Retrying request to /chat/completions in 7.750626 seconds
+2025-10-25 13:28:47,691 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:47,691 [INFO] Retrying request to /chat/completions in 7.629606 seconds
+2025-10-25 13:28:55,775 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:28:56,270 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-25 13:31:40,050 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:31:40,051 [INFO] Retrying request to /chat/completions in 0.467917 seconds
+2025-10-25 13:31:40,848 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:31:40,848 [INFO] Retrying request to /chat/completions in 0.877380 seconds
+2025-10-25 13:31:42,149 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:31:42,149 [INFO] Retrying request to /chat/completions in 1.941198 seconds
+2025-10-25 13:31:44,592 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:31:44,593 [INFO] Retrying request to /chat/completions in 3.457046 seconds
+2025-10-25 13:31:48,519 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:31:48,519 [INFO] Retrying request to /chat/completions in 6.968353 seconds
+2025-10-25 13:31:55,927 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:31:55,928 [INFO] Retrying request to /chat/completions in 6.810833 seconds
+2025-10-25 13:32:03,088 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:32:03,089 [INFO] Retrying request to /chat/completions in 6.086669 seconds
+2025-10-25 13:32:09,544 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:32:09,544 [INFO] Retrying request to /chat/completions in 6.099646 seconds
+2025-10-25 13:32:16,001 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:32:16,003 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:33:27,180 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:27,180 [INFO] Retrying request to /chat/completions in 0.446063 seconds
+2025-10-25 13:33:28,130 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:28,130 [INFO] Retrying request to /chat/completions in 0.931690 seconds
+2025-10-25 13:33:29,426 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:29,426 [INFO] Retrying request to /chat/completions in 1.813484 seconds
+2025-10-25 13:33:31,727 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:31,727 [INFO] Retrying request to /chat/completions in 3.691362 seconds
+2025-10-25 13:33:35,782 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:35,782 [INFO] Retrying request to /chat/completions in 6.716768 seconds
+2025-10-25 13:33:42,866 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:42,866 [INFO] Retrying request to /chat/completions in 6.005125 seconds
+2025-10-25 13:33:49,352 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:49,353 [INFO] Retrying request to /chat/completions in 6.414120 seconds
+2025-10-25 13:33:56,201 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:33:56,202 [INFO] Retrying request to /chat/completions in 7.606318 seconds
+2025-10-25 13:34:04,258 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:04,965 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-25 13:34:40,197 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:40,198 [INFO] Retrying request to /chat/completions in 0.384937 seconds
+2025-10-25 13:34:41,023 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:41,023 [INFO] Retrying request to /chat/completions in 0.959614 seconds
+2025-10-25 13:34:42,337 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:42,337 [INFO] Retrying request to /chat/completions in 1.920367 seconds
+2025-10-25 13:34:44,619 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:44,620 [INFO] Retrying request to /chat/completions in 3.113901 seconds
+2025-10-25 13:34:48,459 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:48,460 [INFO] Retrying request to /chat/completions in 7.985974 seconds
+2025-10-25 13:34:56,876 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:34:56,876 [INFO] Retrying request to /chat/completions in 7.365246 seconds
+2025-10-25 13:35:04,661 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:35:04,661 [INFO] Retrying request to /chat/completions in 7.513468 seconds
+2025-10-25 13:35:12,726 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:35:12,726 [INFO] Retrying request to /chat/completions in 6.013152 seconds
+2025-10-25 13:35:19,145 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:35:19,145 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:40:12,398 [INFO] Use pytorch device_name: cpu
+2025-10-25 13:40:12,398 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 13:40:15,510 [INFO] Loading faiss with AVX2 support.
+2025-10-25 13:40:15,526 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 13:40:25,691 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:25,691 [INFO] Retrying request to /chat/completions in 0.402847 seconds
+2025-10-25 13:40:26,518 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:26,518 [INFO] Retrying request to /chat/completions in 0.766913 seconds
+2025-10-25 13:40:27,661 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:27,661 [INFO] Retrying request to /chat/completions in 1.703201 seconds
+2025-10-25 13:40:29,934 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:29,934 [INFO] Retrying request to /chat/completions in 3.809044 seconds
+2025-10-25 13:40:34,118 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:34,119 [INFO] Retrying request to /chat/completions in 7.461670 seconds
+2025-10-25 13:40:42,111 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:42,111 [INFO] Retrying request to /chat/completions in 6.281963 seconds
+2025-10-25 13:40:48,809 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:48,809 [INFO] Retrying request to /chat/completions in 6.757985 seconds
+2025-10-25 13:40:56,115 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:40:56,116 [INFO] Retrying request to /chat/completions in 7.949974 seconds
+2025-10-25 13:41:04,591 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:05,139 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-25 13:41:17,570 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:17,571 [INFO] Retrying request to /chat/completions in 0.475153 seconds
+2025-10-25 13:41:18,422 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:18,422 [INFO] Retrying request to /chat/completions in 0.940039 seconds
+2025-10-25 13:41:19,776 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:19,777 [INFO] Retrying request to /chat/completions in 1.807404 seconds
+2025-10-25 13:41:21,937 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:21,937 [INFO] Retrying request to /chat/completions in 3.501310 seconds
+2025-10-25 13:41:25,788 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:25,788 [INFO] Retrying request to /chat/completions in 7.961983 seconds
+2025-10-25 13:41:34,271 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:34,271 [INFO] Retrying request to /chat/completions in 7.890148 seconds
+2025-10-25 13:41:42,572 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:42,573 [INFO] Retrying request to /chat/completions in 7.029021 seconds
+2025-10-25 13:41:49,939 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:49,940 [INFO] Retrying request to /chat/completions in 7.534718 seconds
+2025-10-25 13:41:57,839 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:41:57,839 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:42:04,080 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:04,080 [INFO] Retrying request to /chat/completions in 0.425481 seconds
+2025-10-25 13:42:04,915 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:04,916 [INFO] Retrying request to /chat/completions in 0.992956 seconds
+2025-10-25 13:42:06,323 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:06,323 [INFO] Retrying request to /chat/completions in 1.705387 seconds
+2025-10-25 13:42:08,592 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:08,592 [INFO] Retrying request to /chat/completions in 3.790852 seconds
+2025-10-25 13:42:12,810 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:12,810 [INFO] Retrying request to /chat/completions in 7.241818 seconds
+2025-10-25 13:42:20,388 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:20,388 [INFO] Retrying request to /chat/completions in 6.048475 seconds
+2025-10-25 13:42:26,884 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:26,884 [INFO] Retrying request to /chat/completions in 6.881399 seconds
+2025-10-25 13:42:34,120 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:34,120 [INFO] Retrying request to /chat/completions in 7.956267 seconds
+2025-10-25 13:42:39,014 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:39,014 [INFO] Retrying request to /chat/completions in 0.469136 seconds
+2025-10-25 13:42:39,850 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:39,850 [INFO] Retrying request to /chat/completions in 0.838953 seconds
+2025-10-25 13:42:41,151 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:41,152 [INFO] Retrying request to /chat/completions in 1.606619 seconds
+2025-10-25 13:42:42,507 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:42,507 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:42:42,986 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:42,986 [INFO] Retrying request to /chat/completions in 3.718372 seconds
+2025-10-25 13:42:47,115 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:47,115 [INFO] Retrying request to /chat/completions in 7.853367 seconds
+2025-10-25 13:42:55,353 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:42:55,353 [INFO] Retrying request to /chat/completions in 6.631709 seconds
+2025-10-25 13:43:02,471 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:02,471 [INFO] Retrying request to /chat/completions in 6.542012 seconds
+2025-10-25 13:43:09,351 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:09,351 [INFO] Retrying request to /chat/completions in 7.250596 seconds
+2025-10-25 13:43:16,983 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:16,983 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 13:43:47,847 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:47,847 [INFO] Retrying request to /chat/completions in 0.470344 seconds
+2025-10-25 13:43:48,920 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:48,920 [INFO] Retrying request to /chat/completions in 0.828873 seconds
+2025-10-25 13:43:50,148 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:50,148 [INFO] Retrying request to /chat/completions in 1.900310 seconds
+2025-10-25 13:43:52,526 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:52,526 [INFO] Retrying request to /chat/completions in 3.937768 seconds
+2025-10-25 13:43:56,817 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:43:56,817 [INFO] Retrying request to /chat/completions in 6.070095 seconds
+2025-10-25 13:44:03,476 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:44:03,476 [INFO] Retrying request to /chat/completions in 7.650614 seconds
+2025-10-25 13:44:11,541 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:44:11,541 [INFO] Retrying request to /chat/completions in 7.736760 seconds
+2025-10-25 13:44:19,706 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:44:19,706 [INFO] Retrying request to /chat/completions in 7.099015 seconds
+2025-10-25 13:44:27,175 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 13:44:27,176 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 16:38:22,394 [INFO] Use pytorch device_name: cpu
+2025-10-25 16:38:22,395 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 16:38:26,049 [INFO] Loading faiss with AVX2 support.
+2025-10-25 16:38:26,065 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 16:38:47,549 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:38:47,549 [INFO] Retrying request to /chat/completions in 0.478528 seconds
+2025-10-25 16:38:49,027 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:38:49,027 [INFO] Retrying request to /chat/completions in 0.966208 seconds
+2025-10-25 16:38:50,611 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:38:50,611 [INFO] Retrying request to /chat/completions in 1.825888 seconds
+2025-10-25 16:38:52,845 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:38:52,846 [INFO] Retrying request to /chat/completions in 3.339438 seconds
+2025-10-25 16:38:57,165 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:38:57,165 [INFO] Retrying request to /chat/completions in 7.315748 seconds
+2025-10-25 16:39:04,948 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:39:04,948 [INFO] Retrying request to /chat/completions in 7.403809 seconds
+2025-10-25 16:39:12,853 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:39:12,853 [INFO] Retrying request to /chat/completions in 6.647094 seconds
+2025-10-25 16:39:21,117 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:39:21,117 [INFO] Retrying request to /chat/completions in 7.973932 seconds
+2025-10-25 16:39:30,558 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 16:39:32,272 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-25 17:24:19,507 [INFO] Use pytorch device_name: cpu
+2025-10-25 17:24:19,509 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-25 17:24:23,180 [INFO] Loading faiss with AVX2 support.
+2025-10-25 17:24:23,479 [INFO] Successfully loaded faiss with AVX2 support.
+2025-10-25 17:27:48,144 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:27:48,146 [INFO] Retrying request to /chat/completions in 0.381920 seconds
+2025-10-25 17:27:49,079 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:27:49,080 [INFO] Retrying request to /chat/completions in 0.784427 seconds
+2025-10-25 17:27:50,378 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:27:50,378 [INFO] Retrying request to /chat/completions in 1.610561 seconds
+2025-10-25 17:27:52,850 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:27:52,851 [INFO] Retrying request to /chat/completions in 3.626137 seconds
+2025-10-25 17:27:57,358 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:27:57,358 [INFO] Retrying request to /chat/completions in 6.071161 seconds
+2025-10-25 17:28:04,058 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:28:04,060 [INFO] Retrying request to /chat/completions in 6.856238 seconds
+2025-10-25 17:28:12,062 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:28:12,063 [INFO] Retrying request to /chat/completions in 6.766404 seconds
+2025-10-25 17:28:20,040 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:28:20,041 [INFO] Retrying request to /chat/completions in 6.889195 seconds
+2025-10-25 17:28:27,476 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:28:27,477 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 17:29:18,771 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:18,772 [INFO] Retrying request to /chat/completions in 0.423610 seconds
+2025-10-25 17:29:20,200 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:20,200 [INFO] Retrying request to /chat/completions in 0.861112 seconds
+2025-10-25 17:29:21,685 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:21,686 [INFO] Retrying request to /chat/completions in 1.558069 seconds
+2025-10-25 17:29:23,858 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:23,858 [INFO] Retrying request to /chat/completions in 3.224965 seconds
+2025-10-25 17:29:27,509 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:27,510 [INFO] Retrying request to /chat/completions in 7.230741 seconds
+2025-10-25 17:29:36,161 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:36,161 [INFO] Retrying request to /chat/completions in 6.919162 seconds
+2025-10-25 17:29:44,581 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:44,582 [INFO] Retrying request to /chat/completions in 6.965156 seconds
+2025-10-25 17:29:52,468 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:29:52,470 [INFO] Retrying request to /chat/completions in 6.430254 seconds
+2025-10-25 17:30:00,633 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:30:00,633 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-10-25 17:31:16,705 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:16,705 [INFO] Retrying request to /chat/completions in 0.420093 seconds
+2025-10-25 17:31:17,532 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:17,533 [INFO] Retrying request to /chat/completions in 0.845488 seconds
+2025-10-25 17:31:18,797 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:18,797 [INFO] Retrying request to /chat/completions in 1.589594 seconds
+2025-10-25 17:31:20,788 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:20,788 [INFO] Retrying request to /chat/completions in 3.956843 seconds
+2025-10-25 17:31:25,138 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:25,138 [INFO] Retrying request to /chat/completions in 6.305646 seconds
+2025-10-25 17:31:31,843 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:31,844 [INFO] Retrying request to /chat/completions in 6.130116 seconds
+2025-10-25 17:31:38,394 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:38,395 [INFO] Retrying request to /chat/completions in 6.082955 seconds
+2025-10-25 17:31:44,825 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:44,825 [INFO] Retrying request to /chat/completions in 7.917776 seconds
+2025-10-25 17:31:53,283 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-10-25 17:31:53,283 [ERROR] LLM failure (after Groq fallback if any): Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-11-08 21:56:16,384 [INFO] Use pytorch device_name: cpu
+2025-11-08 21:56:16,384 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-08 21:56:21,913 [INFO] Loading faiss with AVX2 support.
+2025-11-08 21:56:22,097 [INFO] Successfully loaded faiss with AVX2 support.
+2025-11-08 22:11:50,280 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:11:50,281 [INFO] Retrying request to /chat/completions in 0.442652 seconds
+2025-11-08 22:11:51,718 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:11:51,718 [INFO] Retrying request to /chat/completions in 0.887208 seconds
+2025-11-08 22:11:52,968 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:11:52,968 [INFO] Retrying request to /chat/completions in 1.899571 seconds
+2025-11-08 22:11:55,241 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:11:55,241 [INFO] Retrying request to /chat/completions in 3.420778 seconds
+2025-11-08 22:11:59,049 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:11:59,049 [INFO] Retrying request to /chat/completions in 6.009320 seconds
+2025-11-08 22:12:05,894 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:12:05,894 [INFO] Retrying request to /chat/completions in 6.283519 seconds
+2025-11-08 22:12:13,079 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:12:13,080 [INFO] Retrying request to /chat/completions in 7.874203 seconds
+2025-11-08 22:12:21,305 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:12:21,305 [INFO] Retrying request to /chat/completions in 7.779143 seconds
+2025-11-08 22:12:29,468 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-11-08 22:12:30,047 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

@@ -23,14 +23,14 @@ import string
 import logging
 import importlib.util
 from typing import List, Dict, Tuple, Optional, Set
-
+from univkb import UNIV_KB, is_university_query, univ_kb_blocks_for
 import streamlit as st
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.callbacks import BaseCallbackHandler
-
+from ui import apply_theme, render_appearance_controls
+from data_io import build_or_load_index  
 from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT, USE_OPENAI
-from data_loader import load_catalog_rows, rows_to_documents
-from indexer import ensure_index, load_index, rebuild_index
+
 
 # --- Secrets / keys (env + streamlit secrets) ---
 def _get_secret(key: str) -> str | None:
@@ -137,7 +137,7 @@ DEPT_PREFIXES = {
     "pharm": ("PHA",),
     "dent": ("BDS",),
 }
-KNOWN_COLLEGES = {"All", "CAS", "COP", "COD"}
+KNOWN_COLLEGES = {"CAS", "COP", "COD"}
 LANG_OPTIONS = {"English": "English", "Arabic": "Arabic"}
 
 DEGREE_TOTAL = {"CS": 126, "Pharmacy": 180, "Dentistry": 189}
@@ -147,116 +147,8 @@ MAJOR_MAP = {
     "Dentistry": {"college": "COD", "prefixes": ("BDS", "BIO", "CHE")},
 }
 
-# ---------------------- INSTITUTIONAL KB SEED & LOADER ----------------------
-UNIV_KB_SEED = {
-    "university": {
-        "facts": [
-            "American University of Iraq–Baghdad (AUIB), private non-profit; established 2018; first classes Feb 2021.",
-            "Campus located at the Al-Faw Palace complex near Baghdad International Airport; historic site modernized for learning.",
-            "English-language, American-style curriculum with liberal arts core for undergraduates."
-        ],
-        "leadership": [
-            "President: Brad (John Bradley) Cook.",
-            "VP Academic Affairs: Zouhair K. Atieh.",
-            "Deans: CAS – Monica Hanna; COP – Achraf Al Faraj; COD – Nada Naaman."
-        ],
-        "accreditations": [
-            "Recognized by Iraq’s Ministry of Higher Education and Scientific Research.",
-            "College of Pharmacy (B.Pharm): ACPE International Pre-accreditation.",
-            "College of Dentistry: Member of Association for Dental Education in Europe (ADEE)."
-        ],
-        "programs": [
-            "CAS: Biology, Chemistry, Physics, Computer Science, English, History/Archaeology, Psychology, more.",
-            "COP: B.Pharm 5-year program (clinical & industrial tracks).",
-            "COD: BDS 5-year, ~189 credits (preclinical to clinical training)."
-        ],
-        "partnerships": [
-            "Partners/links include Vanderbilt (Education), Lawrence Tech/Temple (Engineering), Exeter (UK), Sapienza (Italy)."
-        ]
-    },
-    "faculty": [
-        {"college":"CAS","name":"Monica Hanna","title":"Dean, College of Arts & Sciences; Egyptologist","areas":"Archaeology, cultural heritage","prior":"American Univ. in Cairo; Univ. of Pisa; Aswan Univ. (Egypt)","notes":""},
-        {"college":"CAS","name":"Doris Jaalouk","title":"Professor of Biology/Public Health","areas":"Public health, health education, nutrition","prior":"Notre Dame Univ.–Louaize (Lebanon)","notes":""},
-        {"college":"CAS","name":"Robert David Putnam","title":"Assistant Professor of History","areas":"Modern Iraqi/Middle East history","prior":"Seattle Pacific Univ.; research posts","notes":""},
-        {"college":"CAS","name":"Mutasem Sinnokrot","title":"Associate Professor of Chemistry/Physics","areas":"Materials & chemical engineering, physical chemistry","prior":"Khalifa Univ. (UAE); other posts","notes":"~35 publications; >5k citations (approx.)"},
-        {"college":"CAS","name":"Dhrgam Al Kafaf","title":"Assistant Professor of Computer Science","areas":"Artificial intelligence, autonomous systems, computer vision","prior":"Research posts in AI/computer vision","notes":"Faculty Senate (Educational Resources Committee)"},
-        {"college":"CAS","name":"Ahmed Elshewy","title":"Assistant Professor of Chemistry","areas":"Medicinal & organic chemistry, catalysis","prior":"Cairo Univ.; postdoctoral work","notes":""},
-        {"college":"CAS","name":"Christos Kokorelis","title":"Associate Professor of Mathematical Physics","areas":"String theory, mathematical physics","prior":"University of Sussex (UK)","notes":""},
-        {"college":"CAS","name":"Ioannis Haranas","title":"Associate Professor of Astrophysics","areas":"Astrophysics, planetary & space physics","prior":"Wilfrid Laurier Univ. (Canada)","notes":""},
-        {"college":"CAS","name":"John Wall","title":"Associate Professor of English & Linguistics","areas":"Literature, linguistics, philosophy","prior":"Positions in UK & Middle East","notes":""},
-        {"college":"CAS","name":"Haidar Sabbagh","title":"Assistant Professor of Physics","areas":"Applied physics, electronics, renewables","prior":"Industry & academia in Iraq","notes":""},
-        {"college":"CAS","name":"Mohammad F. Kazan","title":"Associate Professor; Head of Natural & Applied Sciences","areas":"Molecular immunology, cytokines","prior":"Faculty roles in Lebanon","notes":""},
-        {"college":"COP","name":"Achraf Al Faraj","title":"Dean, College of Pharmacy; Professor","areas":"Nanomedicine, drug delivery","prior":"Univ. Lyon 1 (France); King Saud Univ. (Saudi Arabia); Lebanon","notes":"Founding Dean; 50+ publications (approx.)"},
-        {"college":"COP","name":"Baher S. Daihom","title":"Assistant Professor of Pharmaceutics","areas":"Pharmaceutics, 3D-printed drug delivery","prior":"Pharmaceutics PhD; international conference presentations","notes":"Research on 3D-printed implants"},
-        {"college":"COP","name":"Rana Alaaeddine","title":"Assistant Professor of Pharmacology","areas":"Cardiovascular pharmacology, therapeutics","prior":"American Univ. of Beirut (AUB)","notes":""},
-        {"college":"COP","name":"Adib Charafeddine","title":"Assistant Professor of Medicinal Chemistry","areas":"Medicinal/organic chemistry, drug design","prior":"Academic roles in Lebanon","notes":""},
-        {"college":"COD","name":"Nada Naaman","title":"Dean, College of Dentistry; Periodontist","areas":"Periodontology, implant dentistry","prior":"Saint Joseph Univ. (Beirut); Paris Diderot Univ. (France)","notes":"Former dean; Secretary General of Arab Dental Faculties"}
-    ]
-}
 
-def load_university_kb() -> dict:
-    path = "auib_university_kb.json"
-    if os.path.exists(path):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if not isinstance(data, dict): raise ValueError("Root must be object")
-                if "university" not in data or "faculty" not in data: raise ValueError("Missing keys")
-                return data
-        except Exception as e:
-            log.warning(f"Failed reading auib_university_kb.json, using seed: {e}")
-    return UNIV_KB_SEED
 
-UNIV_KB = load_university_kb()
-
-_UNIV_HOOK_WORDS = {
-    "auib","american university of iraq","baghdad","cas","cop","cod","college of arts","college of pharmacy",
-    "college of dentistry","dean","professor","faculty","mission","vision","accreditation","acpe","adee",
-    "campus","al-faw","al faw","partnership","vanderbilt","temple","exeter","sapienza"
-}
-
-def is_university_query(q: str) -> bool:
-    if not q: return False
-    ql = q.lower()
-    has_name = any(f["name"].lower() in ql for f in UNIV_KB.get("faculty", []))
-    hook = any(w in ql for w in _UNIV_HOOK_WORDS)
-    return has_name or hook
-
-def univ_kb_blocks_for(q: str, limit: int = 24) -> str:
-    ql = (q or "").lower()
-    fac = UNIV_KB.get("faculty", [])
-    scored = []
-    for f in fac:
-        blob = " ".join([f.get("name",""), f.get("title",""), f.get("areas",""), f.get("prior",""), f.get("college","")]).lower()
-        A = set(re.sub(r"[^\w\s]", " ", ql).split())
-        B = set(re.sub(r"[^\w\s]", " ", blob).split())
-        score = len(A & B)
-        if f.get("college","").lower() in ql: score += 1
-        scored.append((score, f))
-    scored.sort(key=lambda x: (-x[0], x[1].get("college",""), x[1].get("name","")))
-    fac_pick = [f for s,f in scored[:limit] if s > 0] or fac[: min(limit, 16)]
-
-    lines = []
-    uni = UNIV_KB.get("university", {})
-    if uni:
-        facts = uni.get("facts", [])
-        accs = uni.get("accreditations", [])
-        leader = uni.get("leadership", [])
-        progs = uni.get("programs", [])
-        parts = uni.get("partnerships", [])
-        if facts:      lines.append("University facts: " + " | ".join(facts))
-        if accs:       lines.append("Accreditations: " + " | ".join(accs))
-        if leader:     lines.append("Leadership: " + " | ".join(leader))
-        if progs:      lines.append("Programs: " + " | ".join(progs))
-        if parts:      lines.append("Partnerships: " + " | ".join(parts))
-    if fac_pick:
-        lines.append("Faculty:")
-        for f in fac_pick:
-            lines.append(
-                f"- [{f.get('college','?')}] {f.get('name','?')} — {f.get('title','?')}; "
-                f"Areas: {f.get('areas','?')}; Prior: {f.get('prior','?')}. {f.get('notes','')}".strip()
-            )
-    return "\n".join(lines) if lines else ""
 
 # ---------------------- PROMPTS ----------------------
 COURSE_PROMPT = """
@@ -368,6 +260,13 @@ def _clean_output(text: str) -> str:
 # ---------------------- HELPERS ----------------------
 def _norm_text(s: str) -> str:
     return (s or "").lower().translate(str.maketrans("", "", string.punctuation)).strip()
+
+def _cap_history(n: int = 80):
+    msgs = st.session_state.get("messages", [])
+    if len(msgs) > n:
+        st.session_state.messages = msgs[-n:]
+
+
 
 def expand_synonyms(q: str) -> str:
     if not q:
@@ -506,20 +405,7 @@ def parse_catalog_intent(q: str) -> Dict | None:
         return {"type": "list", "limit": 150, "scopes": scopes}
     return None
 
-# ---------------------- HYBRID RETRIEVAL ----------------------
-def _try_init_bm25(corpus_texts: List[str]):
-    try:
-        spec = importlib.util.find_spec("rank_bm25")
-        if spec is None: return None
-        mod = importlib.util.module_from_spec(spec)
-        assert spec.loader is not None
-        spec.loader.exec_module(mod)
-        BM25Okapi = getattr(mod, "BM25Okapi", None)
-        if BM25Okapi is None: return None
-        tokenized = [t.split() for t in corpus_texts]
-        return BM25Okapi(tokenized)
-    except Exception:
-        return None
+
 
 def hybrid_retrieve(q: str, retriever, vs, top_k: int, bm25=None) -> List:
     if not q:
@@ -702,64 +588,18 @@ def show_splash():
     st.session_state._splash_shown = True
     st.rerun()
 
-# ---------------------- THEME / APPEARANCE ----------------------
-def apply_theme(primary: str, bg: str, text: str):
-    css = f"""
-    <style>
-    .stApp {{
-        background: {bg} !important;
-        color: {text} !important;
-    }}
-    .stButton>button, .stDownloadButton>button {{
-        background: {primary} !important;
-        color: white !important;
-        border: 0 !important;
-        border-radius: 8px !important;
-    }}
-    .stChatMessage .stMarkdown, .stMarkdown p {{
-        color: {text} !important;
-    }}
-    a, .stMarkdown a {{ color: {primary} !important; }}
-    .stSidebar {{ color: {text} !important; }}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
 
-def _render_appearance_controls():
-    avatar_path = st.session_state.get("profile_avatar_path")
+if "theme_primary" not in st.session_state: st.session_state.theme_primary = "#4d1212"
+if "theme_bg" not in st.session_state:      st.session_state.theme_bg = "#0b1220"
+if "theme_text" not in st.session_state:    st.session_state.theme_text = "#e2e8f0"
+apply_theme(st.session_state.theme_primary, st.session_state.theme_bg, st.session_state.theme_text)
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        _primary = st.color_picker("Accent", st.session_state.get("theme_primary", "#4f46e5"), key="mini_pick_primary")
-    with c2:
-        _bg = st.color_picker("Background", st.session_state.get("theme_bg", "#0b1220"), key="mini_pick_bg")
-    with c3:
-        _textc = st.color_picker("Text", st.session_state.get("theme_text", "#e2e8f0"), key="mini_pick_text")
+if "theme_primary" not in st.session_state: st.session_state.theme_primary = "#4d1212"
+if "theme_bg" not in st.session_state:      st.session_state.theme_bg = "#000000"
+if "theme_text" not in st.session_state:    st.session_state.theme_text = "#FFFFFF"
 
-    _pp = st.file_uploader("Profile picture", type=["png","jpg","jpeg","gif"], key="mini_profile_pic_up")
-    if _pp is not None:
-        try:
-            _avatar_path = "user_avatar.png"
-            with open(_avatar_path, "wb") as f:
-                f.write(_pp.read())
-            st.session_state.profile_avatar_path = _avatar_path
-            avatar_path = _avatar_path
-            st.image(avatar_path, width=64, caption="Current profile")
-        except Exception as e:
-            st.warning(f"Could not save avatar: {e}")
-    elif avatar_path and os.path.exists(avatar_path):
-        st.image(avatar_path, width=64, caption="Current profile")
 
-    if (_primary != st.session_state.get("theme_primary")) or (_bg != st.session_state.get("theme_bg")) or (_textc != st.session_state.get("theme_text")):
-        st.session_state.theme_primary = _primary
-        st.session_state.theme_bg = _bg
-        st.session_state.theme_text = _textc
-        apply_theme(st.session_state.theme_primary, st.session_state.theme_bg, st.session_state.theme_text)
 
-# Apply current theme early
-apply_theme(st.session_state.get("theme_primary", "#4f46e5"),
-            st.session_state.get("theme_bg", "#0b1220"),
-            st.session_state.get("theme_text", "#e2e8f0"))
 
 # ---------------------- SESSION ----------------------
 if "messages" not in st.session_state:
@@ -771,12 +611,7 @@ if "_splash_shown" not in st.session_state:
 if "profile_avatar_path" not in st.session_state:
     st.session_state.profile_avatar_path = None
 
-if "theme_primary" not in st.session_state:
-    st.session_state.theme_primary = "#4d1212"
-if "theme_bg" not in st.session_state:
-    st.session_state.theme_bg = "#000000"
-if "theme_text" not in st.session_state:
-    st.session_state.theme_text = "#FFFFFF"
+
 
 if "schedule_slots" not in st.session_state:
     st.session_state.schedule_slots = []
@@ -798,38 +633,30 @@ if "is_generating" not in st.session_state:
 if not st.session_state._splash_shown:
     show_splash()
 
-# ---------------------- DATA & INDEX ----------------------
-@st.cache_data(show_spinner=True, ttl=60)
-def _load_rows(csv_path: str) -> List[Dict]:
-    return load_catalog_rows(csv_path)
-
-@st.cache_resource(show_spinner=True)
-def _build_or_load_index(csv_path: str, index_dir: str, force: bool) -> Tuple[List[Dict], object, object]:
-    rows = _load_rows(csv_path)
-    docs = rows_to_documents(rows)
-    if force:
-        rebuild_index(docs, index_dir)
-    else:
-        ensure_index(docs, index_dir)
-    vs = load_index(index_dir)
-    try:
-        corpus_texts = [d.page_content for d in vs.docstore._dict.values()]
-    except Exception:
-        corpus_texts = []
-    bm25 = _try_init_bm25(corpus_texts) if corpus_texts else None
-    return rows, vs, bm25
 
 status_col1, status_col2, status_col3 = st.columns([1.3, 1, 1])
 with status_col1:
-    st.title("AUIBPT — AUIB Course Chatbot",anchor=None,help=None,width="stretch")
+    st.markdown("AUIBPT")
 with status_col1:
     st.caption(f"Model: `{MODEL_NAME}` • k={TOP_K} • T={TEMPERATURE} • max={NUM_PREDICT}")
 with status_col3:
     with st.expander("Appearance", expanded=False):
-        _render_appearance_controls()
+        render_appearance_controls()
     with st.expander("Settings", expanded=False):
-        answer_lang = st.selectbox("Answer language", ["English","Arabic"], index=0)
-        debug = st.toggle("Debug", help="Show knowledge base and timing details")
+        if "answer_lang" not in st.session_state:
+            st.session_state.answer_lang = "English"
+        if "debug" not in st.session_state:
+            st.session_state.debug = False
+        st.session_state.answer_lang = st.selectbox("Answer language", ["English","Arabic"],
+        index=["English","Arabic"].index(st.session_state.answer_lang))
+        st.session_state.debug = st.toggle("Debug", value=st.session_state.debug,
+        help="Show knowledge base and timing details")
+        answer_lang = st.session_state.answer_lang
+        debug = st.session_state.debug
+
+
+
+
         # College filter
         try:
             colleges = sorted(list(KNOWN_COLLEGES))
@@ -852,16 +679,24 @@ with status_col3:
             st.session_state.show_schedule = not st.session_state.get("show_schedule", False)
             st.rerun()
     with cols_hdr[1]:
-        clear = st.button("Clear chat")
+        clear_clicked = st.button("Clear chat")
+
     exists = os.path.exists(CSV_PATH)
     st.caption(f"CSV: {'found' if exists else 'missing'}")
 
 with status_col1:
     st.caption("BETA — AUIBPT (Ryunix Build)")
 with status_col3:
-    force_rebuild = st.checkbox("Rebuild FAISS index from CSV (one-time)", value=False)
+    force_rebuild = st.button("Reset")
+    if 'force_rebuild' in locals() and force_rebuild:
+        build_or_load_index(CSV_PATH, INDEX_DIR, force=True)
+        st.success("Index reset.")
+        st.session_state.pop("index_ready", None)
+        st.rerun()
 try:
-    rows_all, vs, bm25 = _build_or_load_index(CSV_PATH, INDEX_DIR, force_rebuild)
+    rows_all, vs, bm25 = build_or_load_index(CSV_PATH, INDEX_DIR, force=False)
+    st.caption(f"Loaded {len(rows_all)} courses • Vector index ready ✓") #healthy or not (delete later)
+
     college_filter = st.session_state.get("college_filter", "All")
     rows = filter_rows_by_college(rows_all, college_filter)
     retriever = vs.as_retriever(search_kwargs={"k": int(TOP_K)})
@@ -1488,7 +1323,7 @@ else:
         st.markdown(q)
     maybe_capture_name(q)
     st.session_state.messages.append({"role": "user", "content": q})
-
+    _cap_history()
     scopes = infer_scopes(q)
     direct_rows = find_rows_by_code(rows_all, q)
     title_rows = find_rows_by_title(rows, q) if not direct_rows else []
@@ -1597,15 +1432,13 @@ else:
             st.caption(f"Answered in {elapsed} • Model: {MODEL_NAME} • k={TOP_K} • T={TEMPERATURE}")
 
     st.session_state.messages.append({"role": "assistant", "content": ans})
+    _cap_history()
     st.session_state.is_generating = False
 
 # Clear chat action (after header button definition)
-try:
-    if clear:
-        st.session_state.messages = []
-        st.experimental_rerun()
-except NameError:
-    pass
+if 'clear_clicked' in locals() and clear_clicked:
+    st.session_state.messages = []
+    st.rerun()
 
 # ---------------------- SCHEDULE BUILDER (invoke below chat) ----------------------
 if st.session_state.get("show_schedule", False):
@@ -1625,17 +1458,3 @@ div[data-testid="stChatInput"] { margin-bottom: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------- FOOTER ----------------------
-st.markdown(
-    """
-    <div style="
-        text-align:center;
-        font-size:13px;
-        color:rgba(226,232,240,0.85);
-        margin-top:20px;
-        padding-top:6px;
-        border-top:1px solid rgba(255,255,255,0.1);
-    "></div>
-    """,
-    unsafe_allow_html=True
-)

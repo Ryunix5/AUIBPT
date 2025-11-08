@@ -1,4 +1,4 @@
-streamlit>=1.37
+streamlit>=1.36.0
 langchain>=0.2.10
 langchain-openai>=0.1.14
 langchain-community>=0.2.10
@@ -9,3 +9,8 @@ sentence-transformers>=2.7.0
 rank-bm25>=0.2.2
 python-dotenv>=1.0.1
 langchain-groq>=0.1.5
+msal>=1.29.0
+python-dotenv>=1.0.1
+SQLAlchemy>=2.0.30
+psycopg2-binary>=2.9.9 # only if using Postgres
+pydantic>=2.8.2

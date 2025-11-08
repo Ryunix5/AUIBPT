@@ -31,7 +31,21 @@ from ui import apply_theme, render_appearance_controls
 from data_io import build_or_load_index  
 from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT, USE_OPENAI
 from collections import OrderedDict
-from settings import USE_GROQ_ONLY
+import os
+try:
+    from settings import USE_GROQ_ONLY as _USE_GROQ_ONLY  
+except Exception:
+    _USE_GROQ_ONLY = None
+
+_USE_GROQ_ONLY_ENV = os.getenv("USE_GROQ_ONLY", "").strip().lower()
+if _USE_GROQ_ONLY_ENV in {"1", "true", "yes", "on"}:
+    USE_GROQ_ONLY = True
+elif _USE_GROQ_ONLY_ENV in {"0", "false", "no", "off"}:
+    USE_GROQ_ONLY = False
+elif isinstance(_USE_GROQ_ONLY, bool):
+    USE_GROQ_ONLY = _USE_GROQ_ONLY
+else:
+    USE_GROQ_ONLY = False  
 
 def _qa_cache_get(q: str):
     key = (q or "").strip().lower()
@@ -247,10 +261,11 @@ question:
 """
 
 CHAT_PROMPT = """
-You are AUIBPT, a helpful, upbeat campus buddy. Be concise (≤3 sentences), conversational, and encouraging.
-Use plain language, optionally offer a short follow-up nudge.
-
-Personalize advice using the student's completed courses from "student_profile" (e.g., what they could take next or what they've unlocked).
+You are AUIBPT, a friendly campus assistant and digital friend.
+Keep your tone upbeat and conversational (≤3 sentences). 
+Answer any type of question — about life, hobbies, events, news, or studies — not only courses.
+Avoid offering or enrolling the user in courses unless they *explicitly* ask about classes or majors.
+Be natural, concise, and supportive.
 
 Respond in {answer_lang}. Put ONLY your final answer inside <final>...</final>.
 
@@ -263,6 +278,7 @@ history:
 question:
 {question}
 """
+
 
 UNIV_PROMPT = """
 You are AUIBPT, a friendly, factual assistant for AUIB. Use ONLY the supplied 'univ_kb' block.

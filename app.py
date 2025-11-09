@@ -1497,12 +1497,20 @@ else:
                     log.error(f"hybrid_retrieve error: {e}"); docs = []
                     docs = reorder_docs_by_scopes(docs, scopes, college_filter)
 
-                    
+
+                    bm25_docs = []  
+
+
                     tokens = (q or "").strip().split()
-                    use_bm25 = len(tokens) >= 3  # skip BM25 on very short queries
-                    if not use_bm25:
-                       bm25_docs = []
-                kb = build_kb_from_docs(docs, bm25_docs if use_bm25 else [], top_k=TOP_K, cap=CHUNK_CHAR_CAP)
+                    use_bm25 = len(tokens) >= 4 and any(len(t) >= 4 for t in tokens) 
+                    if use_bm25 and bm25:
+                        try:
+                            bm25_docs = bm25.get_top_n(tokens, n=int(TOP_K))
+                        except Exception:
+                            bm25_docs = []  
+
+
+                    kb = build_kb_from_docs(docs, bm25_docs, top_k=TOP_K, cap=CHUNK_CHAR_CAP)
                 if st.session_state.completed_codes_all:
                     kb += ("\n---\n" if kb else "") + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
                 if kb and kb != "(no relevant context found)":

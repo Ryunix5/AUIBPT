@@ -47,6 +47,14 @@ elif isinstance(_USE_GROQ_ONLY, bool):
 else:
     USE_GROQ_ONLY = False  
 
+def get_current_major_key() -> str:
+    """Return a valid major key from session or the first available one."""
+    opts = sorted(MAJOR_MAP.keys()) if 'MAJOR_MAP' in globals() else []
+    if not opts:
+        return "GENERAL"
+    if "schedule_major_key" not in st.session_state or st.session_state.schedule_major_key not in opts:
+        st.session_state.schedule_major_key = opts[0]
+    return st.session_state.schedule_major_key
 def _qa_cache_get(q: str):
     key = (q or "").strip().lower()
     cache = st.session_state.setdefault("_qa_cache", OrderedDict())
@@ -943,16 +951,29 @@ def student_context_from_taken(rows_all: List[Dict], taken_codes: Set[str]) -> s
     return "Completed (" + str(completed_credits) + " credits): " + "; ".join(items)
 
 # ----------------------  SCHEDULE BUILDER (+ swap) ----------------------
+# <<<AUIBPT:MAJ_LA_COUNTS>>>
 def build_semester_schedule(
     major_key: str,
     target_credits: int,
     taken_codes: Set[str],
     rows_all: List[Dict],
-    difficulty: str
+    difficulty: str,
+    desired_major: Optional[int] = None,
+    desired_la: Optional[int] = None,
 ) -> Tuple[List[Dict], Dict[str,int], Dict[str,int], int]:
+    """
+    Build a semester plan subject to:
+      - target_credits (hard cap),
+      - explicit desired_major / desired_la counts (if provided),
+      - otherwise fall back to a difficulty-based ratio.
+
+    Always respects prerequisites and LA category availability,
+    and auto-includes CSC101/MAT101 if 'Quantitative' is still missing.
+    """
     used_codes: Set[str] = set(c.upper() for c in taken_codes)
     code_to_row = {r["code"].upper(): r for r in rows_all}
 
+    # LA state & pools
     la_counts = la_completed_counts(used_codes)
     la_remain = la_remaining(la_counts, used_codes)
     la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
@@ -976,6 +997,7 @@ def build_semester_schedule(
         cu = r["code"].upper()
         if cu in used_codes:
             return False
+        # prereqs gate
         reqs = _parse_prereq_codes(r.get("prereqs",""))
         if any(rc not in used_codes for rc in reqs):
             return False
@@ -987,10 +1009,12 @@ def build_semester_schedule(
         cur_credits += c
         return True
 
+    # Ensure Quantitative pair if still missing (CSC101, MAT101).
     for q_code in ["CSC101", "MAT101"]:
         if la_remain.get("Quantitative", 0) > 0 and q_code not in used_codes:
             rq = code_to_row.get(q_code)
             if rq and try_add_row(rq, origin="LA:Quantitative"):
+                # refresh LA pools after adding
                 la_counts = la_completed_counts(used_codes)
                 la_remain = la_remaining(la_counts, used_codes)
                 la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
@@ -999,16 +1023,42 @@ def build_semester_schedule(
                     for r in lst:
                         la_flat.append((cat, r))
 
-    major_weight, la_weight = get_semester_weights(difficulty)
-    major_budget = major_weight
-    la_budget = la_weight
+    # --- Decide major/LA goals ---
+    # If explicit counts provided, honor them; otherwise compute from difficulty.
+    if desired_major is not None or desired_la is not None:
+        # If only one side provided, infer the other from a rough slots estimate.
+        avg_cr = 3  # typical
+        est_slots = max(1, min(7, target_credits // avg_cr))
+        if desired_major is None and desired_la is not None:
+            desired_major = max(0, est_slots - int(desired_la))
+        if desired_la is None and desired_major is not None:
+            desired_la = max(0, est_slots - int(desired_major))
+        desired_major = max(0, int(desired_major or 0))
+        desired_la    = max(0, int(desired_la or 0))
+    else:
+        # Difficulty → ratio → approximate counts
+        major_weight, la_weight = get_semester_weights(difficulty)
+        avg_cr = 3
+        total_slots = max(1, min(7, target_credits // avg_cr))
+        # Split by weights
+        if major_weight + la_weight <= 0:
+            major_goal = total_slots
+            la_goal = 0
+        else:
+            major_goal = round(total_slots * (major_weight / (major_weight + la_weight)))
+            la_goal = total_slots - major_goal
+        desired_major, desired_la = max(0, major_goal), max(0, la_goal)
 
+    major_remaining = int(desired_major)
+    la_remaining_goal = int(desired_la)
+
+    # Main fill loop
     guard = 0
     MAX_ITERS = 1000
-
     while cur_credits < target_credits and guard < MAX_ITERS:
         guard += 1
 
+        # refresh pools each iteration
         major_pool = [r for r in _eligible_major_rows(used_codes, rows_all, major_info["prefixes"])
                       if r["code"].upper() not in used_codes]
 
@@ -1018,50 +1068,77 @@ def build_semester_schedule(
         la_flat = [(cat, r) for cat, lst in la_pool_by_cat.items() for r in lst
                    if r["code"].upper() not in used_codes]
 
-        la_any_needed = any(v > 0 for v in la_remain.values())
+        # If user asked for X LA courses but there are none needed left, we can still add LA as free electives.
+        la_any_available = bool(la_flat)
+
         picked = False
 
+
         def pick_major_first() -> bool:
-            if not la_any_needed:
+            if major_remaining > 0 and la_remaining_goal > 0:
+                # If specific LA categories still needed, prefer LA.
+                if any(v > 0 for v in la_remain.values()):
+                    return False
                 return True
-            if la_budget > 0 and la_flat:
+            if major_remaining > 0:
+                return True
+            if la_remaining_goal > 0:
                 return False
-            return True
+            # both goals satisfied → pick by availability
+            return bool(major_pool)  # True if major_pool has items, else LA
 
         try_major = pick_major_first()
 
         for bucket in (["major", "la"] if try_major else ["la", "major"]):
             if bucket == "major":
-                if major_budget <= 0 or not major_pool:
+                if major_remaining <= 0 or not major_pool:
                     continue
                 for r in major_pool:
                     if try_add_row(r, origin="Major"):
-                        major_budget -= 1
+                        major_remaining -= 1
                         picked = True
                         break
                 if picked:
                     break
             else:
-                if la_budget <= 0 or not la_flat:
+                # LA bucket
+                if la_remaining_goal <= 0 or not la_any_available:
                     continue
                 for (cat, r) in la_flat:
-                    if la_remain.get(cat, 0) <= 0:
+                    
+                    if la_remain.get(cat, 0) <= 0 and any(v > 0 for v in la_remain.values()):
                         continue
                     if try_add_row(r, origin=f"LA:{cat}"):
-                        la_budget -= 1
+                        la_remaining_goal -= 1
                         picked = True
                         break
                 if picked:
                     break
 
         if not picked:
+        
+            for r in major_pool:
+                if try_add_row(r, origin="Major"):
+                    picked = True
+                    break
+            if not picked:
+                for (cat, r) in la_flat:
+                    if try_add_row(r, origin=f"LA:{cat}"):
+                        picked = True
+                        break
+
+        if not picked:
+            
             break
 
-        if major_budget <= 0 and la_budget <= 0:
-            major_budget = major_weight
-            la_budget = la_weight
+        
+        if major_remaining <= 0 and la_remaining_goal <= 0:
+            
+            if cur_credits >= target_credits - 2:
+                break
 
     return schedule, la_counts, la_remain, cur_credits
+
 
 def _rebuild_pools(major_key: str, taken_codes: Set[str], rows_all: List[Dict]) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
     la_counts = la_completed_counts(taken_codes)
@@ -1158,37 +1235,87 @@ def _undo_swap():
 # ---------------------- SCHEDULE BUILDER (function) ----------------------
 def render_schedule_builder(rows_all, vs, bm25):
     st.markdown("### Schedule Builder")
+
+    # --- difficulty incl. CUSTOM ---
     if "schedule_difficulty" not in st.session_state:
-        st.session_state.schedule_difficulty = "Medium"
+        st.session_state.schedule_difficulty = "Medium"  # used when NOT in Custom
+    if "schedule_custom_mode" not in st.session_state:
+        st.session_state.schedule_custom_mode = False
+
+    diff_opts = ["Easy", "Medium", "Hard", "Custom"]
+    current_choice = "Custom" if st.session_state.schedule_custom_mode else st.session_state.schedule_difficulty
     difficulty_choice = st.radio(
         "Semester difficulty",
-        options=["Easy", "Medium", "Hard"],
-        index=["Easy","Medium","Hard"].index(st.session_state.schedule_difficulty),
+        options=diff_opts,
+        index=diff_opts.index(current_choice),
         horizontal=True,
-        help=("Easy increases Liberal Arts weight. "
-              "Medium uses 3:1 (Major:Liberal). "
-              "Hard increases Major weight."),
+        help=("Easy increases Liberal Arts weight; Medium balanced; "
+              "Hard increases Major weight. Choose Custom to specify exact counts.")
     )
-    st.session_state.schedule_difficulty = difficulty_choice
+    # Persist selection
+    if difficulty_choice == "Custom":
+        st.session_state.schedule_custom_mode = True
+        # keep previous non-custom choice in st.session_state.schedule_difficulty
+    else:
+        st.session_state.schedule_custom_mode = False
+        st.session_state.schedule_difficulty = difficulty_choice
 
-    try:
-        options = list(MAJOR_MAP.keys())
-    except Exception:
-        options = ["CS"]
-    if not options:
-        options = ["CS"]
-    try:
-        default_idx = options.index(st.session_state.schedule_major_key) if "schedule_major_key" in st.session_state else 0
-    except ValueError:
-        default_idx = 0
-    major_key = st.selectbox("Major / program", options, index=default_idx)
+    # --- major / program select (always visible) ---
+    options = sorted(MAJOR_MAP.keys())
+    current = get_current_major_key()
+    major_key = st.selectbox(
+        "Major / program",
+        options,
+        index=options.index(current) if current in options else 0,
+        help="Choose which major to plan for."
+    )
     st.session_state.schedule_major_key = major_key
-    target_credits = st.slider("Target credits", 9, 21, st.session_state.schedule_target_credits, 1)
+    _major_key = get_current_major_key()  # safe use below
+
+    # --- target credits (always visible) ---
+    if "schedule_target_credits" not in st.session_state:
+        st.session_state.schedule_target_credits = 15
+    target_credits = st.slider(
+        "Target credits",
+        min_value=9, max_value=21, value=int(st.session_state.schedule_target_credits), step=1,
+        help="Maximum credits to take this term."
+    )
     st.session_state.schedule_target_credits = target_credits
 
-    picker_scope = st.radio("Completed-course picker scope:", ["Major only", "Liberal Arts only", "Both"], horizontal=True)
+    # --- Major/Liberal counts (visible ONLY in Custom) ---
+    if st.session_state.schedule_custom_mode:
+        cols_counts = st.columns(2)
+        with cols_counts[0]:
+            if "schedule_major_count" not in st.session_state:
+                st.session_state.schedule_major_count = 3
+            st.session_state.schedule_major_count = st.number_input(
+                "Major courses this term", min_value=0, max_value=7, step=1,
+                value=int(st.session_state.schedule_major_count),
+                help="Exact number of major courses you want to take."
+            )
+        with cols_counts[1]:
+            if "schedule_la_count" not in st.session_state:
+                st.session_state.schedule_la_count = 2
+            st.session_state.schedule_la_count = st.number_input(
+                "Liberal Arts courses this term", min_value=0, max_value=7, step=1,
+                value=int(st.session_state.schedule_la_count),
+                help="Exact number of liberal arts courses you want to take."
+            )
+    else:
+        # ensure keys exist even when hidden
+        if "schedule_major_count" not in st.session_state:
+            st.session_state.schedule_major_count = 3
+        if "schedule_la_count" not in st.session_state:
+            st.session_state.schedule_la_count = 2
 
-    major_prefixes = MAJOR_MAP[major_key]["prefixes"]
+    # --- Completed-courses picker (always visible) ---
+    picker_scope = st.radio(
+        "Completed-course picker scope:",
+        ["Major only", "Liberal Arts only", "Both"],
+        horizontal=True,
+    )
+
+    major_prefixes = MAJOR_MAP[_major_key]["prefixes"]
     major_only_rows = [r for r in rows_all if r["code"].upper().startswith(major_prefixes)]
     la_only_rows    = [r for r in rows_all if r["code"].upper() in LA_CATEGORY]
 
@@ -1208,6 +1335,9 @@ def render_schedule_builder(rows_all, vs, bm25):
     label_to_code = {f"{r['code']} — {r['title']}": r["code"].upper() for r in picker_rows}
     visible_codes = set(label_to_code.values())
 
+    if "completed_codes_all" not in st.session_state:
+        st.session_state.completed_codes_all = set()
+
     preselected_labels = [lbl for lbl, code in label_to_code.items() if code in st.session_state.completed_codes_all]
     picked_labels = st.multiselect("I have completed:", labels, default=preselected_labels, key="completed_picker")
     picked_visible_codes = {label_to_code[lbl] for lbl in picked_labels}
@@ -1217,18 +1347,19 @@ def render_schedule_builder(rows_all, vs, bm25):
     taken_codes_all = set(st.session_state.completed_codes_all)
 
     completed_credits = _credits_completed(taken_codes_all, rows_all)
-    degree_total = DEGREE_TOTAL[major_key]
+    degree_total = DEGREE_TOTAL.get(_major_key, 126)
     st.caption(f"Progress: {completed_credits} / {degree_total} credits • Target this term: {target_credits}")
 
+    # --- action buttons (always visible) ---
     col_build_a, col_build_b, col_build_c, col_build_d, col_build_e = st.columns([0.35,0.2,0.2,0.15,0.1])
     with col_build_a:
         build_btn = st.button("Build schedule", use_container_width=True)
     with col_build_b:
         reset_btn = st.button("Reset", use_container_width=True)
     with col_build_c:
-        topup_btn = st.button("Auto top-up", use_container_width=True, disabled=not st.session_state.schedule_slots)
+        topup_btn = st.button("Auto top-up", use_container_width=True, disabled=not st.session_state.get("schedule_slots"))
     with col_build_d:
-        undo_btn = st.button("Undo swap", use_container_width=True, disabled=not st.session_state.swap_history)
+        undo_btn = st.button("Undo swap", use_container_width=True, disabled=not st.session_state.get("swap_history"))
     with col_build_e:
         if st.button("Close", use_container_width=True):
             st.session_state.show_schedule = False
@@ -1239,15 +1370,23 @@ def render_schedule_builder(rows_all, vs, bm25):
         st.session_state.schedule_planned_credits = 0
         st.rerun()
 
+    # --- build schedule (uses difficulty unless Custom; respects credit cap) ---
     if build_btn:
+        desired_major = st.session_state.schedule_major_count if st.session_state.schedule_custom_mode else None
+        desired_la    = st.session_state.schedule_la_count    if st.session_state.schedule_custom_mode else None
+
         schedule, la_counts, la_remain, planned_credits = build_semester_schedule(
-            major_key=major_key,
+            major_key=_major_key,
             target_credits=target_credits,
             taken_codes=taken_codes_all,
             rows_all=rows_all,
-            difficulty=st.session_state.get("schedule_difficulty", "Medium")
+            difficulty=st.session_state.get("schedule_difficulty", "Medium"),  # used when not Custom
+            desired_major=desired_major,  # used when Custom
+            desired_la=desired_la,        # used when Custom
         )
-        la_pool, major_pool = _rebuild_pools(major_key, taken_codes_all, rows_all)
+
+        # rebuild pools for slot candidates
+        la_pool, major_pool = _rebuild_pools(_major_key, taken_codes_all, rows_all)
 
         slots = []
         used = set(taken_codes_all)
@@ -1279,8 +1418,9 @@ def render_schedule_builder(rows_all, vs, bm25):
         st.session_state.schedule_slots = slots
         st.session_state.schedule_planned_credits = sum(_credits_from_str(s["candidates"][0].get("credits")) for s in slots)
 
-    if topup_btn and st.session_state.schedule_slots:
-        _auto_top_up(major_key, target_credits, taken_codes_all, st.session_state.schedule_slots, rows_all)
+    # --- top-up & undo ---
+    if topup_btn and st.session_state.get("schedule_slots"):
+        _auto_top_up(_major_key, target_credits, taken_codes_all, st.session_state.schedule_slots, rows_all)
         st.session_state.schedule_planned_credits = sum(_credits_from_str(s["candidates"][s["current_idx"]].get("credits")) for s in st.session_state.schedule_slots)
         st.rerun()
 
@@ -1290,7 +1430,8 @@ def render_schedule_builder(rows_all, vs, bm25):
         else:
             st.info("Nothing to undo.")
 
-    if st.session_state.schedule_slots:
+    # --- render current schedule ---
+    if st.session_state.get("schedule_slots"):
         st.markdown("### Suggested schedule")
         new_total = 0
 
@@ -1301,7 +1442,11 @@ def render_schedule_builder(rows_all, vs, bm25):
 
             cols = st.columns([0.64, 0.12, 0.12, 0.12])
             with cols[0]:
-                st.markdown(f"**{cur['code']} — {cur['title']}**  \nCategory: {slot['origin']} • Credits: {cr} • Prereqs: {pr}  \nStatus: {'Locked' if slot.get('locked') else 'Unlocked'}")
+                st.markdown(
+                    f"**{cur['code']} — {cur['title']}**  \n"
+                    f"Category: {slot['origin']} • Credits: {cr} • Prereqs: {pr}  \n"
+                    f"Status: {'Locked' if slot.get('locked') else 'Unlocked'}"
+                )
                 why_bits = []
                 if cur["code"].upper() in LA_CATEGORY:
                     why_bits.append(f"meets {LA_CATEGORY[cur['code'].upper()]}")
@@ -1370,6 +1515,7 @@ def render_schedule_builder(rows_all, vs, bm25):
                 st.rerun()
             except Exception as e:
                 st.warning(f"Could not load schedule: {e}")
+
 
 # ---------------------- CHAT HISTORY RENDER ----------------------
 def render_history():

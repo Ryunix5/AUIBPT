@@ -811,3 +811,15 @@
 2025-11-08 23:07:51,569 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
 2025-11-08 23:07:55,098 [INFO] Loading faiss with AVX2 support.
 2025-11-08 23:07:55,112 [INFO] Successfully loaded faiss with AVX2 support.
+2025-11-09 23:30:45,486 [INFO] Use pytorch device_name: cpu
+2025-11-09 23:30:45,486 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-09 23:30:49,670 [INFO] Loading faiss with AVX2 support.
+2025-11-09 23:30:49,811 [INFO] Successfully loaded faiss with AVX2 support.
+2025-11-09 23:32:57,286 [INFO] Use pytorch device_name: cpu
+2025-11-09 23:32:57,286 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-09 23:38:54,037 [INFO] Use pytorch device_name: cpu
+2025-11-09 23:38:54,039 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-09 23:42:30,836 [INFO] Use pytorch device_name: cpu
+2025-11-09 23:42:30,836 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-11-09 23:48:39,051 [INFO] Use pytorch device_name: cpu
+2025-11-09 23:48:39,051 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2

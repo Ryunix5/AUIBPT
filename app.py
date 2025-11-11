@@ -11,21 +11,6 @@ from langchain_core.callbacks import BaseCallbackHandler
 from univkb import UNIV_KB, is_university_query, univ_kb_blocks_for
 from ui import apply_theme, render_appearance_controls
 from data_io import build_or_load_index
-with st.expander("🔎 Secrets Debug (temporary)", expanded=True):
-    has_sdk = (create_client is not None)
-    url_raw = st.secrets.get("SUPABASE_URL", None)
-    key_raw = st.secrets.get("SUPABASE_ANON_KEY", None)
-    def _mask(s, keep=6):
-        if not s: return "(missing)"
-        s = str(s)
-        return s[:keep] + "…" + s[-4:] if len(s) > keep+4 else s
-    st.write({
-        "SDK installed?": has_sdk,
-        "URL present? (st.secrets)": bool(url_raw),
-        "KEY present? (st.secrets)": bool(key_raw),
-        "URL preview": _mask(url_raw or ""),
-        "KEY length": len(key_raw or 0),
-    })
 
 # ---------------------- Settings (safe fallbacks) ----------------------
 try:
@@ -117,6 +102,21 @@ def get_supabase() -> Optional[SupabaseClient]:
     except Exception as e:
         st.warning(f"Could not init Supabase: {e}. Running without auth.")
         return None
+with st.expander("🔎 Secrets Debug (temporary)", expanded=True):
+    has_sdk = (create_client is not None)
+    url_raw = st.secrets.get("SUPABASE_URL", None)
+    key_raw = st.secrets.get("SUPABASE_ANON_KEY", None)
+    def _mask(s, keep=6):
+        if not s: return "(missing)"
+        s = str(s)
+        return s[:keep] + "…" + s[-4:] if len(s) > keep+4 else s
+    st.write({
+        "SDK installed?": has_sdk,
+        "URL present? (st.secrets)": bool(url_raw),
+        "KEY present? (st.secrets)": bool(key_raw),
+        "URL preview": _mask(url_raw or ""),
+        "KEY length": len(key_raw or 0),
+    })
 
 sb: Optional[SupabaseClient] = get_supabase()
 # ---- Supabase/PostgREST compatibility helpers ----

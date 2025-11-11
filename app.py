@@ -967,7 +967,7 @@ with status_col1:
 # ---------------------- Load index / catalog ----------------------
 try:
     rows_all, vs, bm25 = build_or_load_index(CSV_PATH, INDEX_DIR, force=False)
-    st.caption(f"Loaded {len(rows_all)} courses • Vector index ready ✓")
+    st.caption(f"Loaded {len(rows_all)} courses • Vector index ready")
     college_filter = st.session_state.get("college_filter", "All")
     rows = filter_rows_by_college(rows_all, college_filter)
     retriever = vs.as_retriever(search_kwargs={"k": int(TOP_K)})

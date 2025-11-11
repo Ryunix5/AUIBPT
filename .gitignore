@@ -1,25 +1,33 @@
-﻿# Virtual envs
-.venv/
-venv/
-env/
-chatbot/Lib/
-Lib/
-**/site-packages/
-
-# Python cache
+﻿# Python caches
 __pycache__/
 *.pyc
 
-# OS / editor
-.DS_Store
-Thumbs.db
-.vscode/
+# Logs
+*.log
 
-# App artifacts
-user_avatar.png
-*.dll
-*.so
-*.dylib
+# Virtualenv / venv
+chatbot/
+Scripts/
+Lib/
+Include/
+pyvenv.cfg
 
-# Streamlit
+# Model and index artifacts
+*.pkl
+*.npy
+*.npz
+*.pt
+*.h5
+*.bin
+
+# Streamlit cache
+.streamlit/
 .streamlit/secrets.toml
+
+# Local config / API keys
+.env
+.env.*
+
+# Data files
+*.csv
+*.json

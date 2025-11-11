@@ -50,8 +50,13 @@ def _to_str(x) -> str:
     return x if isinstance(x, str) else str(x)
 
 def _clean_output(text: str) -> str:
+    """
+    Keep the assistant's Markdown (lists, newlines) intact while stripping think/final tags.
+    """
     if not text:
         return "I don't know from the provided data."
+
+    # 1) Extract last <final>...</final> block if present
     finals = re.findall(r"<final>(.*?)</final>", text, flags=re.DOTALL | re.IGNORECASE)
     if finals:
         text = next((blk.strip() for blk in reversed(finals) if blk.strip()), finals[-1].strip())
@@ -59,13 +64,31 @@ def _clean_output(text: str) -> str:
         m_open = re.search(r"<final>(.*)$", text, flags=re.DOTALL | re.IGNORECASE)
         if m_open:
             text = m_open.group(1).strip()
+
+    # 2) Remove hidden chain-of-thought and any residual tags, but DO NOT collapse whitespace
     text = re.sub(r"<think\b[^>]*>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r"</?think\b[^>]*>", "", text, flags=re.IGNORECASE)
     text = re.sub(r"</?final\b[^>]*>", "", text, flags=re.IGNORECASE)
-    text = re.sub(r'(?is)\brules:\b.*', '', text)
-    text = re.sub(r'(?is)\b(knowledge base|kb|instructions)\b.*', '', text)
-    text = re.sub(r"\s+", " ", text).strip()
+
+    # 3) DO NOT nuke markdown; just normalize newlines a bit
+    # - convert CRLF to LF
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # - trim trailing spaces on each line
+    text = "\n".join(line.rstrip() for line in text.split("\n"))
+    # - collapse 3+ blank lines to max 2 (keeps paragraphs & lists readable)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    # 4) Light safety: if bullets got stuck inline like '- point1 - point2', fix common case
+    # (only when there are no real newlines between dashes)
+    if " - " in text and "\n- " not in text:
+        text = text.replace(" - ", "\n- ")
+
+    # 5) Remove overly aggressive scrub that could eat content (e.g., lines starting "rules:")
+    # (We previously stripped anything after 'rules:'; that's gone now.)
+
+    text = text.strip()
     return text or "I don't know from the provided data."
+
 
 def _get_secret(key: str) -> Optional[str]:
     v = os.getenv(key)
@@ -75,6 +98,30 @@ def _get_secret(key: str) -> Optional[str]:
         return st.secrets[key]
     except Exception:
         return None
+# ---- General KB (local JSON) helpers ----
+def load_general_kb(path="general_academic_kb.json"):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            items = json.load(f)
+        lines = []
+        for it in items:
+            topic = (it.get("topic") or "").strip()
+            content = (it.get("content") or "").strip()
+            if topic and content:
+                lines.append(f"- {topic}: {content}")
+        return "\n".join(lines[:20])
+    except Exception:
+        return ""
+
+def needs_prep_tips(q: str) -> bool:
+    ql = (q or "").lower()
+    hot = [
+        "prepare", "preparation", "study tips", "how to study", "how do i prepare",
+        "how can i prepare", "succeed", "revision", "exam", "practice", "resources",
+        "what to expect", "how to get ready", "how to revise"
+    ]
+    return any(k in ql for k in hot)
+
 
 # ---------------------- Auth / Supabase (env-first; safe fallback) ----------------------
 from typing import Optional, Any, TYPE_CHECKING
@@ -327,6 +374,24 @@ def _first_row(obj) -> dict:
     """Return the first row as dict, or {} if absent."""
     rows = _as_rows(obj)
     return rows[0] if rows else {}
+# ---- Optional web enrichment (no API key needed) ----
+def web_enrichment_snippet(q: str, max_chars=800) -> str:
+    try:
+        from duckduckgo_search import DDGS
+        with DDGS() as ddgs:
+            # Focus on prep/overview style results
+            results = list(ddgs.text(q, region="wt-wt", safesearch="moderate", max_results=3))
+        texts = []
+        for r in results:
+            # r has keys like 'title','href','body'
+            body = (r.get("body") or "").strip()
+            if body:
+                texts.append(body)
+        snippet = " ".join(texts)
+        snippet = re.sub(r"\s+", " ", snippet).strip()
+        return snippet[:max_chars]
+    except Exception:
+        return ""
 
 # ---------------------- UI config ----------------------
 page_icon = "RP.png" if os.path.exists("RP.png") else None
@@ -608,25 +673,39 @@ def prepare_kb_from_docs(docs) -> str:
 
 # ---------------------- Prompts ----------------------
 COURSE_PROMPT = """
-You are AUIBPT, a sharp and friendly university course assistant.
-Use ONLY the provided course knowledge base (kb). If an item is missing in kb, write "Unknown".
-Format your final answer exactly as:
-- College: <college tag or 'Unknown'>
-- Summary: <one lively sentence, ~15–25 words>
-- Key topics: <comma-separated>
-- Prerequisites: <text or 'Unknown'>
-- Credits: <text or 'Unknown'>
-- Source: <course code(s)>
+You are AUIBPT, a friendly and insightful university assistant.
+You have access to two kinds of knowledge:
+(1) A structured course catalog (the 'kb') that includes course details.
+(2) General academic knowledge about how students can succeed, prepare, or plan their studies.
+
+When you answer:
+- Start with a short, natural explanation of what the course is *about* (in 2–3 sentences).
+- Include its main concepts and how they connect to real-world skills or future courses.
+- If the user asks for preparation, study tips, or expectations, give thoughtful, human-style advice.
+- Keep your tone conversational — as if you’re an academic advisor guiding a student.
+- End with a positive, encouraging line.
+
+Make sure any course facts (credits, prerequisites, etc.) come from the kb if available.
+If the kb doesn’t contain that info, guess carefully but state that it’s a general guideline.
+Use warm, approachable language (use "you" and "your").
+Avoid sounding like a catalog entry.
+Encourage curiosity or suggest what course to take next.
+
 Respond in {answer_lang}. Put ONLY your final answer inside <final>...</final>.
+
 student_profile:
 {student_context}
+
 kb:
 {kb}
+
 history:
 {history}
+
 question:
 {question}
 """
+
 
 CHAT_PROMPT = """
 You are AUIBPT, a friendly campus assistant. Keep your tone upbeat and ≤3 sentences.
@@ -701,12 +780,27 @@ def make_llm(model_name: str, temperature: float, max_tokens: int, callbacks=Non
         return ChatOpenAI(model="gpt-4o-mini", temperature=temperature, max_tokens=max_tokens,
                           streaming=True, callbacks=callbacks or [], max_retries=8, timeout=60.0)
 
-def ask_llm_stream(chain, kb: str, history_text: str, q: str, answer_lang: str, student_context: str,
-                   placeholder, univ_kb: str = "", groq_fallback_chain=None) -> str:
+def ask_llm_stream(chain,
+                   kb: str,
+                   history_text: str,
+                   q: str,
+                   answer_lang: str,
+                   student_context: str,
+                   placeholder,
+                   univ_kb: str = "",
+                   groq_fallback_chain=None,
+                   general_kb: str = "",
+                   web_snippet: str = "") -> str:
     handler = StreamHandler(placeholder)
     payload = {
-        "kb": kb, "univ_kb": univ_kb, "history": history_text, "question": q,
-        "answer_lang": answer_lang, "student_context": student_context
+        "kb": kb,
+        "univ_kb": univ_kb,
+        "general_kb": general_kb,
+        "web_snippet": web_snippet,
+        "history": history_text,
+        "question": q,
+        "answer_lang": answer_lang,
+        "student_context": student_context
     }
     try:
         raw = chain.invoke(payload, config={"callbacks":[handler]})
@@ -879,6 +973,19 @@ try:
 except Exception as e:
     st.error(f"Failed to prepare index or load catalog: {e}")
     st.stop()
+# ---------------------- Load index / catalog ----------------------
+try:
+    rows_all, vs, bm25 = build_or_load_index(CSV_PATH, INDEX_DIR, force=False)
+    st.caption(f"Loaded {len(rows_all)} courses • Vector index ready ✓")
+    college_filter = st.session_state.get("college_filter", "All")
+    rows = filter_rows_by_college(rows_all, college_filter)
+    retriever = vs.as_retriever(search_kwargs={"k": int(TOP_K)})
+except Exception as e:
+    st.error(f"Failed to prepare index or load catalog: {e}")
+    st.stop()
+
+
+GENERAL_KB_TEXT = load_general_kb("general_academic_kb.json")
 
 # ---------------------- LLM init ----------------------
 llm = make_llm(MODEL_NAME, TEMPERATURE, NUM_PREDICT)
@@ -1432,14 +1539,28 @@ if q is not None and q.strip():
             kb = rows_to_kb(direct_rows)
             if st.session_state.completed_codes_all:
                 kb += "\n---\n" + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
-            ans = ask_llm_stream(course_chain, kb, history_text, q, answer_lang_str, student_context,
-                                 ans_placeholder, groq_fallback_chain=groq_fallback_course)
+            ans = ask_llm_stream(
+    course_chain,
+    kb, history_text, q, answer_lang_str, student_context,
+    ans_placeholder,
+    groq_fallback_chain=groq_fallback_course,
+    general_kb=(GENERAL_KB_TEXT if needs_prep_tips(q) else ""),
+    web_snippet=(web_enrichment_snippet(q) if needs_prep_tips(q) else "")
+)
+
         elif title_rows:
             kb = rows_to_kb(title_rows)
             if st.session_state.completed_codes_all:
                 kb += "\n---\n" + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
-            ans = ask_llm_stream(course_chain, kb, history_text, q, answer_lang_str, student_context,
-                                 ans_placeholder, groq_fallback_chain=groq_fallback_course)
+            ans = ask_llm_stream(
+    course_chain,
+    kb, history_text, q, answer_lang_str, student_context,
+    ans_placeholder,
+    groq_fallback_chain=groq_fallback_course,
+    general_kb=(GENERAL_KB_TEXT if needs_prep_tips(q) else ""),
+    web_snippet=(web_enrichment_snippet(q) if needs_prep_tips(q) else "")
+)
+
         elif intent:
             if intent["type"] == "count":
                 scoped_rows = rows
@@ -1492,12 +1613,27 @@ if q is not None and q.strip():
                 if st.session_state.completed_codes_all:
                     kb += ("\n---\n" if kb else "") + rows_to_kb([r for r in rows_all if r["code"].upper() in st.session_state.completed_codes_all])
                 if kb and kb != "(no relevant context found)":
-                    ans = ask_llm_stream(course_chain, kb, history_text, q, answer_lang_str, student_context, ans_placeholder)
+                    ans = ask_llm_stream(
+    course_chain,
+    kb, history_text, q, answer_lang_str, student_context,
+    ans_placeholder,
+    groq_fallback_chain=groq_fallback_course,
+    general_kb=(GENERAL_KB_TEXT if needs_prep_tips(q) else ""),
+    web_snippet=(web_enrichment_snippet(q) if needs_prep_tips(q) else "")
+)
+
                 else:
                     ans = "I don't know from the provided data."; ans_placeholder.markdown(ans)
             else:
-                ans = ask_llm_stream(chat_chain, "", history_text, q, answer_lang_str, student_context,
-                                     ans_placeholder, groq_fallback_chain=groq_fallback_chat)
+                ans = ask_llm_stream(
+    course_chain,
+    kb, history_text, q, answer_lang_str, student_context,
+    ans_placeholder,
+    groq_fallback_chain=groq_fallback_course,
+    general_kb=(GENERAL_KB_TEXT if needs_prep_tips(q) else ""),
+    web_snippet=(web_enrichment_snippet(q) if needs_prep_tips(q) else "")
+)
+
                 if st.session_state.get("user_name") and ans and not ans.lower().startswith(st.session_state["user_name"].lower()):
                     ans = friendly_prefix() + ans
                     ans_placeholder.markdown(ans)

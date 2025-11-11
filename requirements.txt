@@ -9,4 +9,4 @@ supabase>=2.5
 postgrest>=0.14
 gotrue>=2.4
 httpx==0.28.1
-duckduckgo-search=6.1.0
+duckduckgo-search==6.1.0

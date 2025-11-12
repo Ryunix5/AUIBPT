@@ -2,6 +2,13 @@
 from __future__ import annotations
 import os
 import streamlit as st
+def queue_autosave():
+    try:
+        import app as _app
+        if hasattr(_app, "queue_autosave"):
+            return _app.queue_autosave()
+    except Exception:
+        pass
 
 def apply_theme(primary: str, bg: str, text: str):
     css = f"""
@@ -31,13 +38,13 @@ def render_appearance_controls():
     c1, c2, c3 = st.columns(3)
     with c1:
         _primary = st.color_picker("Accent", st.session_state.get("theme_primary", "#700000"),
-                                   key="mini_pick_primary")
+                                   key="mini_pick_primary",on_change=queue_autosave,)
     with c2:
         _bg = st.color_picker("Background", st.session_state.get("theme_bg", "#000000"),
-                              key="mini_pick_bg")
+                              key="mini_pick_bg",on_change=queue_autosave,)
     with c3:
         _textc = st.color_picker("Text", st.session_state.get("theme_text", "#e2e8f0"),
-                                 key="mini_pick_text")
+                                 key="mini_pick_text",on_change=queue_autosave,)
 
     _pp = st.file_uploader("Profile picture", type=["png","jpg","jpeg","gif"], key="mini_profile_pic_up")
     if _pp is not None:

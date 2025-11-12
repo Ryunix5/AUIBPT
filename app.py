@@ -11,6 +11,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 from univkb import UNIV_KB, is_university_query, univ_kb_blocks_for
 from ui import apply_theme, render_appearance_controls
 from data_io import build_or_load_index
+from ui import apply_theme, render_appearance_controls
 
 # ---------------------- Settings (safe fallbacks) ----------------------
 try:
@@ -271,46 +272,45 @@ def _pg_exec(qb):
     return res  # best effort
 
 
+# ---------- Autosave utilities ----------
 def _auth_user():
-    """Return (uid,email) from session or Supabase, resilient to weird shapes."""
-    u = st.session_state.get("_auth_user")
-
-    # preferred: dict-like
-    if isinstance(u, dict):
-        return (u.get("id"), u.get("email"))
-
-    # object with attributes
-    if hasattr(u, "id") or hasattr(u, "email"):
-        return (getattr(u, "id", None), getattr(u, "email", None))
-
-    # sometimes folks accidentally stash a list
-    if isinstance(u, list) and u:
-        first = u[0]
-        if isinstance(first, dict):
-            return (first.get("id"), first.get("email"))
-        if hasattr(first, "id") or hasattr(first, "email"):
-            return (getattr(first, "id", None), getattr(first, "email", None))
-
-    # last resort: ask Supabase SDK directly
+    """Return (uid, email) if signed in, else (None, None)."""
+    user = st.session_state.get("_auth_user")
+    if isinstance(user, dict) and user.get("id"):
+        return user["id"], user.get("email")
     try:
-        if sb is not None and hasattr(sb, "auth") and hasattr(sb.auth, "get_user"):
+        if sb and hasattr(sb, "auth") and hasattr(sb.auth, "get_user"):
             resp = sb.auth.get_user()
-            user = getattr(resp, "user", None)
-            if user:
-                uid = getattr(user, "id", None)
-                em  = getattr(user, "email", None)
+            u = getattr(resp, "user", None)
+            if u:
+                uid = getattr(u, "id", None)
+                em  = getattr(u, "email", None)
                 if uid:
-                    # normalize and save a clean dict for next time
-                    st.session_state._auth_user = {"id": uid, "email": em}
-                    return (uid, em)
+                    st.session_state["_auth_user"] = {"id": uid, "email": em}
+                    return uid, em
     except Exception:
         pass
+    return None, None
 
-    return (None, None)
+def queue_autosave():
+    st.session_state["_autosave_needed"] = True
+
+def run_autosave_if_needed():
+    if not st.session_state.get("_autosave_needed"):
+        return
+    uid, em = _auth_user()
+    if uid:
+        try:
+            save_profile_settings(uid)   # <-- your existing saver
+            st.session_state["_autosave_needed"] = False
+        except Exception:
+            # don't crash the UI; just keep the flag for next run
+            pass
+# [ANCHOR: AUTOSAVE_UTILS]
+
 
 
 def sign_in(email: str, password: str):
-    """Sign in and normalize what we store in session."""
     if sb is None:
         return
     sb.auth.sign_out()
@@ -318,10 +318,15 @@ def sign_in(email: str, password: str):
     user = getattr(res, "user", None)
     uid  = getattr(user, "id", None)
     em   = getattr(user, "email", None)
-    st.session_state._auth_user = {"id": uid, "email": em}  # always a dict
+    st.session_state._auth_user = {"id": uid, "email": em}
+
     try:
-        # ensure profile exists (safe if already there)
         sb.table("profiles").upsert({"id": uid, "email": em}).execute()
+    except Exception:
+        pass
+
+    try:
+        load_profile_settings(uid)
     except Exception:
         pass
 
@@ -340,6 +345,79 @@ def sign_out():
     st.session_state.pop("messages", None)
 def _auth_enabled() -> bool:
     return sb is not None
+
+# ---------- User settings persistence ----------
+
+SETTINGS_KEYS = [
+    # appearance & UI
+    "theme_primary", "theme_bg", "theme_text", "answer_lang",
+    "college_filter", "mobile_mode", "profile_avatar_path",
+    # schedule / study prefs (optional but handy)
+    "schedule_target_credits", "schedule_major_key", "completed_codes_all",
+]
+
+def _get_profile(uid: str):
+    """Return the first row from profiles for uid (or {})."""
+    if sb is None:
+        return {}
+    qb = _pg_tbl("profiles")
+    rows = _pg_exec(_pg_eq(_pg_select(qb, "*"), "id", uid))
+    rows = rows if isinstance(rows, list) else [rows]
+    return rows[0] if rows else {}
+
+def _apply_settings_to_session(settings: dict):
+    """Map saved settings JSON into st.session_state safely."""
+    if not isinstance(settings, dict):
+        return
+    for k in SETTINGS_KEYS:
+        if k in settings:
+            # special-case: completed_codes_all is a set in session
+            if k == "completed_codes_all":
+                try:
+                    st.session_state[k] = set(settings[k]) if settings[k] is not None else set()
+                except Exception:
+                    st.session_state[k] = set()
+            else:
+                st.session_state[k] = settings[k]
+    # re-apply theme immediately if present
+    if "theme_primary" in settings or "theme_bg" in settings or "theme_text" in settings:
+        apply_theme(
+            st.session_state.get("theme_primary", "#4d1212"),
+            st.session_state.get("theme_bg", "#000000"),
+            st.session_state.get("theme_text", "#e2e8f0"),
+        )
+
+def load_profile_settings(uid: str) -> bool:
+    """Fetch settings from Supabase and apply to session. Returns True if applied."""
+    if sb is None:
+        return False
+    try:
+        row = _get_profile(uid)
+        settings = row.get("settings") or {}
+        _apply_settings_to_session(settings)
+        return bool(settings)
+    except Exception as e:
+        st.warning(f"Could not load saved settings: {e}")
+        return False
+
+def save_profile_settings(uid: str) -> bool:
+    """Collect current session prefs and persist to Supabase."""
+    if sb is None:
+        return False
+    try:
+        payload = {}
+        for k in SETTINGS_KEYS:
+            val = st.session_state.get(k)
+            # JSON-safe for sets
+            if isinstance(val, set):
+                val = sorted(list(val))
+            payload[k] = val
+        qb = _pg_tbl("profiles")
+        _pg_exec(_pg_update(qb, {"settings": payload, "updated_at": "now()"}).eq("id", uid))
+        return True
+    except Exception as e:
+        st.warning(f"Could not save settings: {e}")
+        return False
 
 # DAL (safe when auth disabled)
 def list_chats(uid: str):
@@ -880,6 +958,8 @@ status_col1, status_col2, status_col3 = st.columns([1.4, 1, 1])
 with status_col1:
     st.markdown("### AUIBPT")
     st.caption(f"Model: `{MODEL_NAME}` • k={TOP_K} • T={TEMPERATURE} • max={NUM_PREDICT}")
+    uid, email = _auth_user()
+run_autosave_if_needed()
 with status_col3:
     # Inline account box (since sidebar is hidden)
         # ---- Chats (top-right) ----
@@ -955,28 +1035,80 @@ with status_col3:
                                 st.error(f"Delete failed: {e}")
                 else:
                     st.caption("No chats yet. Create your first chat above.")
-    with st.expander("Account", expanded=False):
+            # Auto-load settings on first paint of a signed-in session
+            if uid and not st.session_state.get("_settings_applied_once"):
+                if load_profile_settings(uid):
+                    st.session_state["_settings_applied_once"] = True
+        # Optional: force a rerun to immediately reflect theme/UI
+                    st.rerun()
+
+        
+        # Best-effort session persistence flag (email only; no passwords are stored)
+            st.session_state.setdefault("remember_me", True)
+
         if sb is None:
-            st.info("Login disabled (no Supabase keys configured).")
+            st.info("Login is disabled (no Supabase keys configured).")
         else:
             uid, em = _auth_user()
+
+            # If we previously asked to remember and Supabase still has a session,
+            # _auth_user() will return a uid. Nothing else to do here.
             if uid:
-                st.success(f"Signed in as {em}")
-                colA, colB = st.columns(2)
-                with colA:
-                    if st.button("Sign out", use_container_width=True):
-                        try: sign_out()
-                        finally: st.rerun()
-                with colB:
-                    st.caption("Chats will be saved to your account.")
+                st.success(f"Signed in as {em or 'unknown'}")
+
+                a1, a2 = st.columns(2)
+                with a1:
+                    if st.button("Sign out", use_container_width=True, key="acct_signout"):
+                        try:
+                            sign_out()
+                        finally:
+                            st.rerun()
+                with a2:
+                    st.toggle("Remember me (stay signed in)", key="remember_me",
+                              value=st.session_state.get("remember_me", True),
+                              help="Keeps your Supabase session alive when possible.")
+
+                st.caption("— Your chats and settings are saved to your account —")
+
+                # Profile settings controls
+                st.divider()
+                st.markdown("**Profile settings**")
+
+                b1, b2 = st.columns(2)
+                with b1:
+                    if st.button("Save settings to my account", use_container_width=True, key="btn_save_settings"):
+                        ok = save_profile_settings(uid)
+                        st.success("Saved!" if ok else "Nothing saved (or auth disabled).")
+                with b2:
+                    if st.button("Load my saved settings", use_container_width=True, key="btn_load_settings"):
+                        applied = load_profile_settings(uid)
+                        if applied:
+                            st.success("Loaded your saved settings.")
+                            # Re-apply theme and refresh immediately
+                            st.rerun()
+                        else:
+                            st.info("No saved settings found for this account.")
+
             else:
+                # Not signed in yet
+                st.caption("Sign in to save chats & settings.")
                 em_in = st.text_input("Email", key="auth_email_hdr")
                 pw_in = st.text_input("Password", type="password", key="auth_pw_hdr")
-                if st.button("Sign in", use_container_width=True):
+
+                # Remember me toggle (stores preference; cannot store passwords)
+                st.toggle("Remember me (stay signed in)", key="remember_me",
+                          value=st.session_state.get("remember_me", True),
+                          help="We’ll try to keep your session active so you don’t have to sign in again.")
+
+                if st.button("Sign in", use_container_width=True, key="acct_signin"):
                     try:
-                        sign_in(em_in, pw_in); st.rerun()
+                        sign_in(em_in, pw_in)
+                        # If remember_me is on, we rely on Supabase to keep the session valid.
+                        # (No password or token is stored by this app.)
+                        st.rerun()
                     except Exception as e:
                         st.error(f"Sign in failed: {e}")
+
                 with st.expander("Create account"):
                     new_em = st.text_input("Email (new)", key="auth_email_new_hdr")
                     new_pw = st.text_input("Password (new)", type="password", key="auth_pw_new_hdr")
@@ -986,12 +1118,26 @@ with status_col3:
                         except Exception as e:
                             st.error(f"Sign up failed: {e}")
 
+
     with st.expander("Appearance", expanded=False):
         render_appearance_controls()
     with st.expander("Settings", expanded=False):
-        st.session_state.answer_lang = st.selectbox("Answer language", ["English","Arabic"],
-            index=["English","Arabic"].index(st.session_state.answer_lang))
-        st.session_state.debug = st.toggle("Debug", value=st.session_state.debug)
+        st.session_state.answer_lang = st.selectbox(
+    "Answer language",
+    ["English", "Arabic"],
+    index=["English", "Arabic"].index(st.session_state.answer_lang),
+    on_change=queue_autosave,
+    key="answer_lang_select",
+)
+# [ANCHOR: AUTOSAVE_LANG]
+        st.session_state.debug = st.toggle(
+    "Debug (show internal details)",
+    value=st.session_state.debug,
+    help="For developers: shows retrieved context, timings, and extra logs.",
+    on_change=queue_autosave,
+    key="debug_toggle",
+)
+# [ANCHOR: AUTOSAVE_DEBUG]
         try:
             colleges = sorted(list(KNOWN_COLLEGES))
         except Exception:
@@ -1001,11 +1147,12 @@ with status_col3:
             _idx = options.index(st.session_state.college_filter)
         except ValueError:
             _idx = 0
-        st.session_state.college_filter = st.selectbox("College filter", options, index=_idx)
+        st.session_state.college_filter = st.selectbox("College filter", options, index=_idx,on_change=queue_autosave)
         st.session_state.setdefault("mobile_mode", False)
     st.session_state.mobile_mode = st.toggle(
-    "Mobile-friendly controls", value=st.session_state.mobile_mode, help="Use sliders/radios/pills instead of inputs on phones."
+    "Mobile-friendly controls", value=st.session_state.mobile_mode, help="Use sliders/radios/pills instead of inputs on phones.",on_change=queue_autosave,key="mobile_mode_toggle",
     )
+    
 
     cols_hdr = st.columns(2)
     with cols_hdr[0]:
@@ -1402,7 +1549,7 @@ def render_schedule_builder(rows_all, vs, bm25):
     target_credits = st.slider(
         "Target credits",
         min_value=9, max_value=21,
-        value=int(st.session_state.schedule_target_credits), step=1
+        value=int(st.session_state.schedule_target_credits), step=1 ,on_change=queue_autosave,
     )
     st.session_state.schedule_target_credits = target_credits
 

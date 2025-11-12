@@ -40,6 +40,60 @@ else:
     USE_GROQ_ONLY = False
 
 # ---------------------- Small helpers ----------------------
+def _opt_index(options, value):
+    try:
+        return options.index(value)
+    except Exception:
+        return 0
+
+def ui_select(label, options, *, default=None, key=None, help=None):
+    """On mobile: radio (touch). On desktop: selectbox."""
+    if st.session_state.get("mobile_mode", False):
+        idx = _opt_index(options, default)
+        return st.radio(label, options, index=idx, horizontal=True, key=key, help=help)
+    else:
+        idx = _opt_index(options, default)
+        return st.selectbox(label, options, index=idx, key=key, help=help)
+
+def ui_multi(label, options, *, default=None, key=None, help=None):
+    """On mobile: pills or checkboxes; on desktop: multiselect."""
+    default = default or []
+    if st.session_state.get("mobile_mode", False):
+        # Prefer pills if your Streamlit version supports it
+        if hasattr(st, "pills"):
+            return st.pills(label, options, default=default, selection_mode="multi", key=key, help=help)
+        # Fallback: checkbox grid (no keyboard)
+        st.caption(label)
+        cols = st.columns(3)
+        picked = []
+        for i, opt in enumerate(options):
+            if cols[i % 3].checkbox(opt, value=(opt in default), key=f"{key or label}_{i}"):
+                picked.append(opt)
+        return picked
+    else:
+        return st.multiselect(label, options, default=default, key=key, help=help)
+
+def ui_int(label, *, min_value, max_value, value, step=1, key=None, help=None):
+    """On mobile: select_slider (no keyboard). On desktop: number_input."""
+    if st.session_state.get("mobile_mode", False):
+        return st.select_slider(
+            label,
+            options=list(range(min_value, max_value + 1, step)),
+            value=value,
+            key=key,
+            help=help,
+        )
+    else:
+        return st.number_input(
+            label,
+            min_value=min_value,
+            max_value=max_value,
+            value=value,
+            step=step,
+            key=key,
+            help=help,
+        )
+
 def _to_str(x) -> str:
     try:
         from langchain_core.messages import AIMessage
@@ -948,6 +1002,10 @@ with status_col3:
         except ValueError:
             _idx = 0
         st.session_state.college_filter = st.selectbox("College filter", options, index=_idx)
+        st.session_state.setdefault("mobile_mode", False)
+    st.session_state.mobile_mode = st.toggle(
+    "Mobile-friendly controls", value=st.session_state.mobile_mode, help="Use sliders/radios/pills instead of inputs on phones."
+    )
 
     cols_hdr = st.columns(2)
     with cols_hdr[0]:
@@ -1289,41 +1347,84 @@ def _undo_swap():
 
 def render_schedule_builder(rows_all, vs, bm25):
     st.markdown("### Schedule Builder")
-    if "schedule_difficulty" not in st.session_state: st.session_state.schedule_difficulty = "Medium"
-    if "schedule_custom_mode" not in st.session_state: st.session_state.schedule_custom_mode = False
 
-    diff_opts = ["Easy","Medium","Hard","Custom"]
+    # Mobile mode toggle (put this here if you don't already have it in your header)
+    mcol1, mcol2 = st.columns([1, 1])
+    with mcol2:
+        st.session_state.mobile_mode = st.toggle(
+            "Mobile-friendly controls",
+            value=st.session_state.get("mobile_mode", False),
+            help="Use touch controls on phones (no typing)."
+        )
+
+    # Defaults
+    if "schedule_difficulty" not in st.session_state:
+        st.session_state.schedule_difficulty = "Medium"
+    if "schedule_custom_mode" not in st.session_state:
+        st.session_state.schedule_custom_mode = False
+    if "schedule_target_credits" not in st.session_state:
+        st.session_state.schedule_target_credits = 15
+    st.session_state.setdefault("schedule_major_count", 3)
+    st.session_state.setdefault("schedule_la_count", 2)
+
+    # Difficulty (radio is already mobile-friendly)
+    diff_opts = ["Easy", "Medium", "Hard", "Custom"]
     current_choice = "Custom" if st.session_state.schedule_custom_mode else st.session_state.schedule_difficulty
-    difficulty_choice = st.radio("Semester difficulty", options=diff_opts, index=diff_opts.index(current_choice), horizontal=True,
-                                 help="Easy favors LA; Hard favors Major; Custom lets you set exact counts.")
+    difficulty_choice = st.radio(
+        "Semester difficulty",
+        options=diff_opts,
+        index=diff_opts.index(current_choice),
+        horizontal=True,
+        help="Easy favors LA; Hard favors Major; Custom lets you set exact counts."
+    )
     if difficulty_choice == "Custom":
         st.session_state.schedule_custom_mode = True
     else:
         st.session_state.schedule_custom_mode = False
         st.session_state.schedule_difficulty = difficulty_choice
 
+    # Major (select → radio on mobile)
     options = sorted(MAJOR_MAP.keys())
     current = get_current_major_key()
-    major_key = st.selectbox("Major / program", options, index=options.index(current) if current in options else 0)
-    st.session_state.schedule_major_key = major_key
+    # Major (select → radio on mobile)
+    options = sorted(MAJOR_MAP.keys())
+    current = get_current_major_key()
+    major_key = ui_select(
+    "Major / program",
+    options,
+    default=(current if current in options else (options[0] if options else None)),
+    key="schedule_major_key"
+    )
     _major_key = get_current_major_key()
 
-    if "schedule_target_credits" not in st.session_state: st.session_state.schedule_target_credits = 15
-    target_credits = st.slider("Target credits", min_value=9, max_value=21, value=int(st.session_state.schedule_target_credits), step=1)
+
+    # Target credits (slider is already touch-friendly; keep)
+    target_credits = st.slider(
+        "Target credits",
+        min_value=9, max_value=21,
+        value=int(st.session_state.schedule_target_credits), step=1
+    )
     st.session_state.schedule_target_credits = target_credits
 
+    # Custom counts (number_input → select_slider on mobile)
     if st.session_state.schedule_custom_mode:
         cols_counts = st.columns(2)
         with cols_counts[0]:
-            st.session_state.schedule_major_count = st.number_input("Major courses this term", min_value=0, max_value=7, step=1,
-                                                                    value=int(st.session_state.get("schedule_major_count",3)))
+            st.session_state.schedule_major_count = ui_int(
+                "Major courses this term",
+                min_value=0, max_value=7, step=1,
+                value=int(st.session_state.get("schedule_major_count", 3)),
+                key="ui_major_count"
+            )
         with cols_counts[1]:
-            st.session_state.schedule_la_count = st.number_input("Liberal Arts courses this term", min_value=0, max_value=7, step=1,
-                                                                 value=int(st.session_state.get("schedule_la_count",2)))
-    else:
-        st.session_state.setdefault("schedule_major_count", 3)
-        st.session_state.setdefault("schedule_la_count", 2)
+            st.session_state.schedule_la_count = ui_int(
+                "Liberal Arts courses this term",
+                min_value=0, max_value=7, step=1,
+                value=int(st.session_state.get("schedule_la_count", 2)),
+                key="ui_la_count"
+            )
 
+    # Picker scope (radio is fine)
     picker_scope = st.radio("Completed-course picker scope:", ["Major only","Liberal Arts only","Both"], horizontal=True)
     major_prefixes = MAJOR_MAP[_major_key]["prefixes"]
     major_only_rows = [r for r in rows_all if r["code"].upper().startswith(major_prefixes)]
@@ -1336,23 +1437,32 @@ def render_schedule_builder(rows_all, vs, bm25):
         seen = set(); picker_rows = []
         for r in major_only_rows + la_only_rows:
             cu = r["code"].upper()
-            if cu not in seen: picker_rows.append(r); seen.add(cu)
+            if cu not in seen:
+                picker_rows.append(r); seen.add(cu)
 
     labels = [f"{r['code']} — {r['title']}" for r in picker_rows]
     label_to_code = {f"{r['code']} — {r['title']}": r["code"].upper() for r in picker_rows}
     visible_codes = set(label_to_code.values())
 
+    # Completed courses (multiselect → pills/checkbox grid on mobile)
     preselected_labels = [lbl for lbl, code in label_to_code.items() if code in st.session_state.completed_codes_all]
-    picked_labels = st.multiselect("I have completed:", labels, default=preselected_labels, key="completed_picker")
+    picked_labels = ui_multi(
+        "I have completed:",
+        labels,
+        default=preselected_labels,
+        key="completed_picker"
+    )
     picked_visible_codes = {label_to_code[lbl] for lbl in picked_labels}
     hidden_kept = st.session_state.completed_codes_all - visible_codes
     st.session_state.completed_codes_all = hidden_kept | picked_visible_codes
     taken_codes_all = set(st.session_state.completed_codes_all)
 
+    # Progress
     completed_credits = _credits_completed(taken_codes_all, rows_all)
     degree_total = DEGREE_TOTAL.get(_major_key, 126)
     st.caption(f"Progress: {completed_credits} / {degree_total} credits • Target this term: {target_credits}")
 
+    # Action buttons
     col_build_a, col_build_b, col_build_c, col_build_d, col_build_e = st.columns([0.35,0.2,0.2,0.15,0.1])
     with col_build_a: build_btn = st.button("Build schedule", use_container_width=True)
     with col_build_b: reset_btn = st.button("Reset", use_container_width=True)
@@ -1424,7 +1534,7 @@ def render_schedule_builder(rows_all, vs, bm25):
                     current_used = {c["candidates"][c["current_idx"]]["code"].upper() for c in st.session_state.schedule_slots}
                     current_used.discard(cur["code"].upper())
                     replaced = False
-                    for j in range(slot["current_idx"] + 1, len(slot["candidates"])):
+                    for j in range(slot["current_idx"] + 1, len(slot["candidates"])):  # find next eligible
                         cand = slot["candidates"][j]; code_u = cand["code"].upper()
                         if code_u in current_used or code_u in taken_codes_all: continue
                         old_cr = _credits_from_str(cur.get("credits")); new_cr = _credits_from_str(cand.get("credits"))

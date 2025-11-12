@@ -453,6 +453,156 @@ def save_message(chat_id: str, role: str, content: str):
     if not _auth_enabled(): return
     qb = _pg_tbl("messages")
     _pg_exec(_pg_insert(qb, {"chat_id": chat_id, "role": role, "content": content}))
+# --- Chat helpers (compat layer for single-file app) ---
+
+def current_user():
+    """Return (uid, email) if signed in, else (None, None)."""
+    # Use cached user first
+    u = st.session_state.get("_auth_user")
+    if isinstance(u, dict) and u.get("id"):
+        return u.get("id"), u.get("email")
+    # Ask Supabase
+    try:
+        if sb and hasattr(sb, "auth") and hasattr(sb.auth, "get_user"):
+            resp = sb.auth.get_user()
+            supa_user = getattr(resp, "user", None)
+            if supa_user:
+                uid = getattr(supa_user, "id", None)
+                em  = getattr(supa_user, "email", None)
+                if uid:
+                    st.session_state["_auth_user"] = {"id": uid, "email": em}
+                    return uid, em
+    except Exception:
+        pass
+    return None, None
+
+
+def ensure_current_chat():
+    """Ensure st.session_state.current_chat_id exists for the signed-in user."""
+    if not sb:
+        return
+    uid, _ = current_user()
+    if not uid:
+        st.session_state.pop("current_chat_id", None)
+        return
+    if st.session_state.get("current_chat_id"):
+        return
+    try:
+        q = sb.table("chats").select("id").eq("user_id", uid).order("created_at", desc=True).limit(1).execute()
+        data = getattr(q, "data", q) or []
+        if isinstance(data, list) and data:
+            st.session_state["current_chat_id"] = data[0]["id"]
+            return
+        # Create a first chat if none exist
+        ins = sb.table("chats").insert({"user_id": uid, "title": "New chat"}).execute()
+        d = getattr(ins, "data", ins) or []
+        if isinstance(d, list) and d:
+            st.session_state["current_chat_id"] = d[0]["id"]
+    except Exception as e:
+        st.warning(f"Could not initialize chats: {e}")
+
+
+def load_chat_messages_into_ui(chat_id: str):
+    """Load chat messages into st.session_state.messages."""
+    if not sb or not chat_id:
+        return
+    try:
+        res = sb.table("messages").select("*").eq("chat_id", chat_id).order("created_at", desc=False).execute()
+        data = getattr(res, "data", res) or []
+        st.session_state["messages"] = [
+            {"role": row.get("role"), "content": row.get("content", "")} for row in data
+        ]
+    except Exception as e:
+        st.warning(f"Could not load messages: {e}")
+def render_chats_ui(prefix: str = "hdr_chats"):
+    import streamlit as st
+    # Sign-in guard
+    if sb is None:
+        st.info("Sign in to save and manage chats.")
+        return
+
+    # current_user(), ensure_current_chat(), list_chats(), create_chat(),
+    # rename_chat(), delete_chat(), load_chat_messages_into_ui()
+    # must exist in this file (your compat layer) or be imported.
+
+    uid, email = current_user()
+    if not uid:
+        st.info("Please sign in to view your chats.")
+        return
+
+    ensure_current_chat()
+
+    try:
+        chat_rows = list_chats(uid) or []
+    except Exception as exc:
+        chat_rows = []
+        st.warning(f"Could not fetch chats: {exc}")
+
+    c1, c2 = st.columns([0.6, 0.4])
+    with c1:
+        new_title = st.text_input(
+            "New chat title",
+            value="New chat",
+            key=f"{prefix}_new_title",
+        )
+    with c2:
+        if st.button("Create chat", use_container_width=True, key=f"{prefix}_create"):
+            try:
+                chat_id = create_chat(uid, new_title.strip() or "New chat")
+                st.session_state.current_chat_id = chat_id
+                st.session_state.messages = []
+                st.rerun()
+            except Exception as exc:
+                st.error(f"Create failed: {exc}")
+
+    if chat_rows:
+        titles = [row.get("title") or "(untitled)" for row in chat_rows]
+        ids = [row["id"] for row in chat_rows]
+        current_chat = st.session_state.get("current_chat_id", ids[0])
+        try:
+            idx = ids.index(current_chat) if current_chat in ids else 0
+        except ValueError:
+            idx = 0
+
+        picked = st.radio(
+            "Your chats",
+            options=list(range(len(ids))),
+            format_func=lambda i: titles[i],
+            index=idx,
+            key=f"{prefix}_pick",
+        )
+        chosen_id = ids[picked]
+
+        bA, bB, bC = st.columns([0.33, 0.33, 0.34])
+        with bA:
+            if st.button("Open", use_container_width=True, key=f"{prefix}_open"):
+                st.session_state.current_chat_id = chosen_id
+                load_chat_messages_into_ui(chosen_id)
+                st.rerun()
+        with bB:
+            new_name = st.text_input(
+                "Rename to",
+                value=titles[picked],
+                key=f"{prefix}_rename_input",
+            )
+            if st.button("Rename", use_container_width=True, key=f"{prefix}_rename"):
+                try:
+                    rename_chat(chosen_id, new_name.strip() or "(untitled)")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Rename failed: {exc}")
+        with bC:
+            if st.button("Delete", use_container_width=True, key=f"{prefix}_delete"):
+                try:
+                    delete_chat(chosen_id)
+                    if st.session_state.get("current_chat_id") == chosen_id:
+                        st.session_state.current_chat_id = None
+                        st.session_state.messages = []
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Delete failed: {exc}")
+    else:
+        st.caption("No chats yet. Create your first chat above.")
 
 # ---- Chat session helpers (ensure a current chat and load its history) ----
 def _ensure_current_chat():
@@ -964,77 +1114,150 @@ with status_col3:
     # Inline account box (since sidebar is hidden)
         # ---- Chats (top-right) ----
     with st.expander("Chats", expanded=False):
-        if not _auth_enabled():
+        prefix = "hdr_hdr"  # <-- unique namespace so keys never collide
+
+        if sb is None:
             st.info("Sign in to save and manage chats.")
         else:
-            uid, em = _auth_user()
+            # Get current Supabase user
+            uid, email = (None, None)
+            try:
+                resp = sb.auth.get_user()
+                u = getattr(resp, "user", None)
+                if u:
+                    uid = getattr(u, "id", None)
+                    email = getattr(u, "email", None)
+            except Exception:
+                pass
+
             if not uid:
                 st.info("Please sign in to view your chats.")
             else:
-                # Make sure we have a current chat id
-                _ensure_current_chat()
-
-                # Fetch latest list
+                # Ensure we have a current chat id (create one if none exist)
                 try:
-                    chat_rows = list_chats(uid) or []
+                    q = (
+                        sb.table("chats")
+                        .select("id,title,created_at")
+                        .eq("user_id", uid)
+                        .order("created_at", desc=True)
+                        .limit(1)
+                        .execute()
+                    )
+                    data = getattr(q, "data", q) or []
+                    if not st.session_state.get("current_chat_id"):
+                        if data:
+                            st.session_state["current_chat_id"] = data[0]["id"]
+                        else:
+                            ins = sb.table("chats").insert({"user_id": uid, "title": "New chat"}).execute()
+                            ins_data = getattr(ins, "data", ins) or []
+                            if ins_data:
+                                st.session_state["current_chat_id"] = ins_data[0]["id"]
                 except Exception as e:
-                    chat_rows = []
-                    st.warning(f"Could not fetch chats: {e}")
+                    st.warning(f"Could not initialize chats: {e}")
 
-                # New chat row
+                # Fetch all chats for the user
+                try:
+                    res = (
+                        sb.table("chats")
+                        .select("id,title,created_at")
+                        .eq("user_id", uid)
+                        .order("created_at", desc=True)
+                        .execute()
+                    )
+                    chat_rows = getattr(res, "data", res) or []
+                except Exception as exc:
+                    chat_rows = []
+                    st.warning(f"Could not fetch chats: {exc}")
+
                 c1, c2 = st.columns([0.6, 0.4])
                 with c1:
-                    new_title = st.text_input("New chat title", value="New chat", key="new_chat_title_hdr")
+                    new_title = st.text_input(
+                        "New chat title",
+                        value="New chat",
+                        key=f"{prefix}_new_title",
+                    )
                 with c2:
-                    if st.button("Create chat", use_container_width=True, key="btn_create_chat_hdr"):
+                    if st.button("Create chat", use_container_width=True, key=f"{prefix}_create"):
                         try:
-                            cid = create_chat(uid, new_title.strip() or "New chat")
-                            st.session_state.current_chat_id = cid
-                            st.session_state.messages = []
+                            ins = sb.table("chats").insert({"user_id": uid, "title": (new_title or 'New chat').strip()}).execute()
+                            d = getattr(ins, "data", ins) or []
+                            if d:
+                                st.session_state["current_chat_id"] = d[0]["id"]
+                                st.session_state["messages"] = []
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"Create failed: {e}")
+                        except Exception as exc:
+                            st.error(f"Create failed: {exc}")
 
-                # Existing chats (radio list)
                 if chat_rows:
-                    titles = [r.get("title") or "(untitled)" for r in chat_rows]
-                    ids = [r["id"] for r in chat_rows]
+                    titles = [row.get("title") or "(untitled)" for row in chat_rows]
+                    ids = [row["id"] for row in chat_rows]
+                    current_chat = st.session_state.get("current_chat_id", ids[0] if ids else None)
                     try:
-                        cur = st.session_state.get("current_chat_id", ids[0])
-                        idx = ids.index(cur) if cur in ids else 0
+                        idx = ids.index(current_chat) if current_chat in ids else 0
                     except ValueError:
                         idx = 0
-                    picked = st.radio("Your chats", options=list(range(len(ids))),
-                                      format_func=lambda i: titles[i], index=idx, key="chat_pick_hdr")
+
+                    picked = st.radio(
+                        "Your chats",
+                        options=list(range(len(ids))),
+                        format_func=lambda i: titles[i],
+                        index=idx,
+                        key=f"{prefix}_pick",
+                    )
                     chosen_id = ids[picked]
 
-                    # Buttons: open, rename, delete
                     bA, bB, bC = st.columns([0.33, 0.33, 0.34])
                     with bA:
-                        if st.button("Open", use_container_width=True, key="btn_open_chat_hdr"):
-                            st.session_state.current_chat_id = chosen_id
-                            _load_chat_messages_into_ui(chosen_id)
-                            st.rerun()
+                        if st.button("Open", use_container_width=True, key=f"{prefix}_open"):
+                            try:
+                                res = (
+                                    sb.table("messages")
+                                    .select("*")
+                                    .eq("chat_id", chosen_id)
+                                    .order("created_at", desc=False)
+                                    .execute()
+                                )
+                                msgs = getattr(res, "data", res) or []
+                                st.session_state["current_chat_id"] = chosen_id
+                                st.session_state["messages"] = [
+                                    {"role": m.get("role"), "content": m.get("content", "")} for m in msgs
+                                ]
+                                st.rerun()
+                            except Exception as exc:
+                                st.error(f"Open failed: {exc}")
+
                     with bB:
-                        new_name = st.text_input("Rename to", value=titles[picked], key="rename_title_hdr")
-                        if st.button("Rename", use_container_width=True, key="btn_rename_chat_hdr"):
+                        new_name = st.text_input(
+                            "Rename to",
+                            value=titles[picked],
+                            key=f"{prefix}_rename_input",
+                        )
+                        if st.button("Rename", use_container_width=True, key=f"{prefix}_rename"):
                             try:
-                                rename_chat(chosen_id, new_name.strip() or "(untitled)")
+                                (
+                                    sb.table("chats")
+                                    .update({"title": (new_name or '(untitled)').strip()})
+                                    .eq("id", chosen_id)
+                                    .execute()
+                                )
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"Rename failed: {e}")
+                            except Exception as exc:
+                                st.error(f"Rename failed: {exc}")
+
                     with bC:
-                        if st.button("Delete", use_container_width=True, key="btn_delete_chat_hdr"):
+                        if st.button("Delete", use_container_width=True, key=f"{prefix}_delete"):
                             try:
-                                delete_chat(chosen_id)
+                                sb.table("chats").delete().eq("id", chosen_id).execute()
                                 if st.session_state.get("current_chat_id") == chosen_id:
-                                    st.session_state.current_chat_id = None
-                                    st.session_state.messages = []
+                                    st.session_state["current_chat_id"] = None
+                                    st.session_state["messages"] = []
                                 st.rerun()
-                            except Exception as e:
-                                st.error(f"Delete failed: {e}")
+                            except Exception as exc:
+                                st.error(f"Delete failed: {exc}")
                 else:
                     st.caption("No chats yet. Create your first chat above.")
+
+               
             # Auto-load settings on first paint of a signed-in session
             if uid and not st.session_state.get("_settings_applied_once"):
                 if load_profile_settings(uid):
@@ -1063,10 +1286,7 @@ with status_col3:
                             sign_out()
                         finally:
                             st.rerun()
-                with a2:
-                    st.toggle("Remember me (stay signed in)", key="remember_me",
-                              value=st.session_state.get("remember_me", True),
-                              help="Keeps your Supabase session alive when possible.")
+                
 
                 st.caption("— Your chats and settings are saved to your account —")
 
@@ -1074,20 +1294,7 @@ with status_col3:
                 st.divider()
                 st.markdown("**Profile settings**")
 
-                b1, b2 = st.columns(2)
-                with b1:
-                    if st.button("Save settings to my account", use_container_width=True, key="btn_save_settings"):
-                        ok = save_profile_settings(uid)
-                        st.success("Saved!" if ok else "Nothing saved (or auth disabled).")
-                with b2:
-                    if st.button("Load my saved settings", use_container_width=True, key="btn_load_settings"):
-                        applied = load_profile_settings(uid)
-                        if applied:
-                            st.success("Loaded your saved settings.")
-                            # Re-apply theme and refresh immediately
-                            st.rerun()
-                        else:
-                            st.info("No saved settings found for this account.")
+        
 
             else:
                 # Not signed in yet

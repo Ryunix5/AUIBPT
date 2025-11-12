@@ -14,3 +14,4 @@ sentence-transformers>=3.0
 supabase>=2.5
 postgrest>=0.14
 duckduckgo-search>=6.1.0
+langchain-huggingface>=0.1.0

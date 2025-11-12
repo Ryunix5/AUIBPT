@@ -23,6 +23,7 @@ from app_core.auth import (
     sign_in,
     sign_out,
     sign_up,
+    rename_chat,
 )
 from app_core.knowledge import (
     CHUNK_CHAR_CAP,

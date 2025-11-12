@@ -1290,12 +1290,7 @@ with status_col3:
 
                 st.caption("— Your chats and settings are saved to your account —")
 
-                # Profile settings controls
-                st.divider()
-                st.markdown("**Profile settings**")
-
-        
-
+                
             else:
                 # Not signed in yet
                 st.caption("Sign in to save chats & settings.")

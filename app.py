@@ -111,7 +111,7 @@ def _clean_output(text: str) -> str:
     if not text:
         return "I don't know from the provided data."
 
-    #  Extract last <final>...</final> block if present
+    # 1) Extract last <final>...</final> block if present
     finals = re.findall(r"<final>(.*?)</final>", text, flags=re.DOTALL | re.IGNORECASE)
     if finals:
         text = next((blk.strip() for blk in reversed(finals) if blk.strip()), finals[-1].strip())
@@ -188,7 +188,7 @@ if TYPE_CHECKING:
 else:
     SupabaseClient = Any  # fallback for runtime when lib may be missing
 
-@st.cache_resource(show_spinner=False)
+
 def get_supabase() -> Optional[SupabaseClient]:
     url = _get_secret("SUPABASE_URL")
     key = _get_secret("SUPABASE_ANON_KEY")
@@ -203,6 +203,14 @@ def get_supabase() -> Optional[SupabaseClient]:
 
 sb: Optional[SupabaseClient] = get_supabase()
 # ---- Supabase/PostgREST compatibility helpers ----
+if "browser_session_initialized" not in st.session_state:
+    if hasattr(sb, "auth") and hasattr(sb.auth, "sign_out"):
+        try:
+            sb.auth.sign_out()
+        except:
+            pass
+    st.session_state.clear()
+    st.session_state.browser_session_initialized = True
 def _pg_tbl(name: str):
     """Return a query builder for a table, compatible across supabase/postgrest versions."""
     if sb is None:
@@ -306,15 +314,19 @@ def run_autosave_if_needed():
 
 
 
-def sign_in(email: str, password: str):
+def sign_in(email, password):
     if sb is None:
         return
-    sb.auth.sign_out()
+    try:
+        sb.auth.sign_out()  # IMPORTANT
+    except:
+        pass
     res = sb.auth.sign_in_with_password({"email": email, "password": password})
     user = getattr(res, "user", None)
-    uid  = getattr(user, "id", None)
-    em   = getattr(user, "email", None)
-    st.session_state._auth_user = {"id": uid, "email": em}
+    if user:
+        st.session_state._auth_user = {"id": user.id}
+
+
 
     try:
         sb.table("profiles").upsert({"id": uid, "email": em}).execute()

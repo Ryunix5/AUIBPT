@@ -314,29 +314,35 @@ def run_autosave_if_needed():
 
 
 
-def sign_in(email, password):
+def sign_in(email: str, password: str):
     if sb is None:
         return
-    try:
-        sb.auth.sign_out()  # IMPORTANT
-    except:
-        pass
+
+    
     res = sb.auth.sign_in_with_password({"email": email, "password": password})
     user = getattr(res, "user", None)
-    if user:
-        st.session_state._auth_user = {"id": user.id}
 
+    if not user:
+        raise RuntimeError("Invalid email or password.")
 
+    uid = getattr(user, "id", None)
+    em = getattr(user, "email", email)
 
+    st.session_state["_auth_user"] = {"id": uid, "email": em}
+
+    # Ensure profile exists
     try:
         sb.table("profiles").upsert({"id": uid, "email": em}).execute()
     except Exception:
         pass
 
+    # Load saved settings
     try:
         load_profile_settings(uid)
     except Exception:
         pass
+
+
 
 def sign_up(email: str, password: str):
     if sb is None: return
@@ -1125,22 +1131,15 @@ with status_col3:
         prefix = "hdr_hdr"  # <-- unique namespace so keys never collide
 
         if sb is None:
-            st.info("Sign in to save and manage chats.")
+                st.info("Sign in to save and manage chats.")
         else:
-            # Get current Supabase user
-            uid, email = (None, None)
-            try:
-                resp = sb.auth.get_user()
-                u = getattr(resp, "user", None)
-                if u:
-                    uid = getattr(u, "id", None)
-                    email = getattr(u, "email", None)
-            except Exception:
-                pass
+            # Use the shared auth helper so header + chats agree
+                uid, email = _auth_user()
 
-            if not uid:
-                st.info("Please sign in to view your chats.")
-            else:
+
+        if not uid:
+            st.info("Please sign in to view your chats.")
+        else:
                 # Ensure we have a current chat id (create one if none exist)
                 try:
                     q = (
@@ -1267,7 +1266,7 @@ with status_col3:
 
                
             # Auto-load settings on first paint of a signed-in session
-            if uid and not st.session_state.get("_settings_applied_once"):
+        if uid and not st.session_state.get("_settings_applied_once"):
                 if load_profile_settings(uid):
                     st.session_state["_settings_applied_once"] = True
         # Optional: force a rerun to immediately reflect theme/UI
@@ -1275,7 +1274,7 @@ with status_col3:
 
         
         # Best-effort session persistence flag (email only; no passwords are stored)
-            st.session_state.setdefault("remember_me", True)
+        st.session_state.setdefault("remember_me", True)
 
         if sb is None:
             st.info("Login is disabled (no Supabase keys configured).")

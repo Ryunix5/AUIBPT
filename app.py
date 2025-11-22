@@ -278,13 +278,33 @@ def _pg_exec(qb):
 
 # ---------- Autosave utilities ----------
 def _auth_user():
+    """
+    Unified auth helper:
+    - First use st.session_state['_auth_user'] if available.
+    - Otherwise, ask Supabase (sb.auth.get_user) and cache it.
+    """
+    # 1) Prefer cached session user
+    u = st.session_state.get("_auth_user")
+    if isinstance(u, dict) and u.get("id"):
+        return u.get("id"), u.get("email")
+
+    # 2) Fallback: ask Supabase
     try:
+        if sb is None or not hasattr(sb, "auth") or not hasattr(sb.auth, "get_user"):
+            return None, None
+
         resp = sb.auth.get_user()
-        if resp and resp.user:
-            return resp.user.id, resp.user.email
+        user = getattr(resp, "user", None)
+        if user:
+            uid = getattr(user, "id", None)
+            email = getattr(user, "email", None)
+            if uid:
+                st.session_state["_auth_user"] = {"id": uid, "email": email}
+                return uid, email
         return None, None
     except Exception:
         return None, None
+
 
 
 def queue_autosave():
@@ -462,20 +482,17 @@ def save_message(chat_id: str, role: str, content: str):
 
 def current_user():
     """Return (uid, email) if signed in, else (None, None)."""
-    # Use cached user first
+    # 1) Use cached user if present
     u = st.session_state.get("_auth_user")
     if isinstance(u, dict) and u.get("id"):
         return u.get("id"), u.get("email")
-    # Ask Supabase
-    try:
-        if sb and hasattr(sb, "auth") and hasattr(sb.auth, "get_user"):
-            uid, email = _auth_user()
-            if uid:
-                    st.session_state["_auth_user"] = {"id": uid, "email": em}
-                    return uid, em
-    except Exception:
-        pass
-    return None, None
+
+    # 2) Fallback to unified helper
+    uid, email = _auth_user()
+    if uid:
+        st.session_state["_auth_user"] = {"id": uid, "email": email}
+    return uid, email
+
 
 
 def ensure_current_chat():
@@ -1106,50 +1123,48 @@ def ask_llm_stream(chain,
 
 # ---------------------- Header / status ----------------------
 status_col1, status_col2, status_col3 = st.columns([1.4, 1, 1])
+
 with status_col1:
     st.markdown("### AUIBPT")
     st.caption(f"Model: `{MODEL_NAME}` • k={TOP_K} • T={TEMPERATURE} • max={NUM_PREDICT}")
-    uid, email = _auth_user()
+
+# Get current user once per run + process any pending autosave
+uid, email = _auth_user()
 run_autosave_if_needed()
+
 with status_col3:
-    # Inline account box (since sidebar is hidden)
-        # ---- Chats (top-right) ----
-    with st.expander("Chats", expanded=False):
-        prefix = "hdr_hdr"  # <-- unique namespace so keys never collide
-
+    # ---- Chats + Account (top-right) ----
+    with st.expander("Chats & Account", expanded=False):
         if sb is None:
-                st.info("Sign in to save and manage chats.")
+            st.info("Login is disabled (no Supabase keys configured).")
         else:
-            # Use the shared auth helper so header + chats agree
-                uid, email = _auth_user()
+            uid, email = _auth_user()
 
+            # If user is signed in
+            if uid:
+                # One-time load of profile settings (theme, etc.)
+                if not st.session_state.get("_settings_applied_once"):
+                    if load_profile_settings(uid):
+                        st.session_state["_settings_applied_once"] = True
+                        st.rerun()
 
-        if not uid:
-            st.info("Please sign in to view your chats.")
-        else:
-                # Ensure we have a current chat id (create one if none exist)
-                try:
-                    q = (
-                        sb.table("chats")
-                        .select("id,title,created_at")
-                        .eq("user_id", uid)
-                        .order("created_at", desc=True)
-                        .limit(1)
-                        .execute()
-                    )
-                    data = getattr(q, "data", q) or []
-                    if not st.session_state.get("current_chat_id"):
-                        if data:
-                            st.session_state["current_chat_id"] = data[0]["id"]
-                        else:
-                            ins = sb.table("chats").insert({"user_id": uid, "title": "New chat"}).execute()
-                            ins_data = getattr(ins, "data", ins) or []
-                            if ins_data:
-                                st.session_state["current_chat_id"] = ins_data[0]["id"]
-                except Exception as e:
-                    st.warning(f"Could not initialize chats: {e}")
+                st.success(f"Signed in as {email or 'unknown'}")
 
-                # Fetch all chats for the user
+                col_acc_1, col_acc_2 = st.columns(2)
+                with col_acc_1:
+                    if st.button("Sign out", use_container_width=True, key="acct_signout"):
+                        try:
+                            sign_out()
+                        finally:
+                            st.rerun()
+
+                with col_acc_2:
+                    st.caption("Your chats and settings are saved to your account.")
+
+                st.divider()
+                st.markdown("**Your chats**")
+
+                # Fetch all chats for this user
                 try:
                     res = (
                         sb.table("chats")
@@ -1163,6 +1178,9 @@ with status_col3:
                     chat_rows = []
                     st.warning(f"Could not fetch chats: {exc}")
 
+                prefix = "hdr_chats"  # unique key namespace for header chat controls
+
+                # Create-new row
                 c1, c2 = st.columns([0.6, 0.4])
                 with c1:
                     new_title = st.text_input(
@@ -1173,9 +1191,13 @@ with status_col3:
                 with c2:
                     if st.button("Create chat", use_container_width=True, key=f"{prefix}_create"):
                         try:
-                            ins = sb.table("chats").insert({"user_id": uid, "title": (new_title or 'New chat').strip()}).execute()
+                            ins = (
+                                sb.table("chats")
+                                .insert({"user_id": uid, "title": (new_title or 'New chat').strip()})
+                                .execute()
+                            )
                             d = getattr(ins, "data", ins) or []
-                            if d:
+                            if isinstance(d, list) and d:
                                 st.session_state["current_chat_id"] = d[0]["id"]
                                 st.session_state["messages"] = []
                             st.rerun()
@@ -1185,22 +1207,23 @@ with status_col3:
                 if chat_rows:
                     titles = [row.get("title") or "(untitled)" for row in chat_rows]
                     ids = [row["id"] for row in chat_rows]
-                    current_chat = st.session_state.get("current_chat_id", ids[0] if ids else None)
+                    current_chat_id = st.session_state.get("current_chat_id", ids[0] if ids else None)
                     try:
-                        idx = ids.index(current_chat) if current_chat in ids else 0
+                        current_idx = ids.index(current_chat_id) if current_chat_id in ids else 0
                     except ValueError:
-                        idx = 0
+                        current_idx = 0
 
                     picked = st.radio(
                         "Your chats",
                         options=list(range(len(ids))),
                         format_func=lambda i: titles[i],
-                        index=idx,
+                        index=current_idx,
                         key=f"{prefix}_pick",
                     )
                     chosen_id = ids[picked]
 
                     bA, bB, bC = st.columns([0.33, 0.33, 0.34])
+                    # Open
                     with bA:
                         if st.button("Open", use_container_width=True, key=f"{prefix}_open"):
                             try:
@@ -1214,12 +1237,14 @@ with status_col3:
                                 msgs = getattr(res, "data", res) or []
                                 st.session_state["current_chat_id"] = chosen_id
                                 st.session_state["messages"] = [
-                                    {"role": m.get("role"), "content": m.get("content", "")} for m in msgs
+                                    {"role": m.get("role"), "content": m.get("content", "")}
+                                    for m in msgs
                                 ]
                                 st.rerun()
                             except Exception as exc:
                                 st.error(f"Open failed: {exc}")
 
+                    # Rename
                     with bB:
                         new_name = st.text_input(
                             "Rename to",
@@ -1238,6 +1263,7 @@ with status_col3:
                             except Exception as exc:
                                 st.error(f"Rename failed: {exc}")
 
+                    # Delete
                     with bC:
                         if st.button("Delete", use_container_width=True, key=f"{prefix}_delete"):
                             try:
@@ -1251,56 +1277,24 @@ with status_col3:
                 else:
                     st.caption("No chats yet. Create your first chat above.")
 
-               
-            # Auto-load settings on first paint of a signed-in session
-        if uid and not st.session_state.get("_settings_applied_once"):
-                if load_profile_settings(uid):
-                    st.session_state["_settings_applied_once"] = True
-        # Optional: force a rerun to immediately reflect theme/UI
-                    st.rerun()
-
-        
-        # Best-effort session persistence flag (email only; no passwords are stored)
-        st.session_state.setdefault("remember_me", True)
-
-        if sb is None:
-            st.info("Login is disabled (no Supabase keys configured).")
-        else:
-            uid, em = _auth_user()
-
-            # If we previously asked to remember and Supabase still has a session,
-            # _auth_user() will return a uid. Nothing else to do here.
-            if uid:
-                st.success(f"Signed in as {em or 'unknown'}")
-
-                a1, a2 = st.columns(2)
-                with a1:
-                    if st.button("Sign out", use_container_width=True, key="acct_signout"):
-                        try:
-                            sign_out()
-                        finally:
-                            st.rerun()
-                
-
-                st.caption("— Your chats and settings are saved to your account —")
-
-                
+            # If NOT signed in: show login form
             else:
-                # Not signed in yet
                 st.caption("Sign in to save chats & settings.")
                 em_in = st.text_input("Email", key="auth_email_hdr")
                 pw_in = st.text_input("Password", type="password", key="auth_pw_hdr")
 
-                # Remember me toggle (stores preference; cannot store passwords)
-                st.toggle("Remember me (stay signed in)", key="remember_me",
-                          value=st.session_state.get("remember_me", True),
-                          help="We’ll try to keep your session active so you don’t have to sign in again.")
+                # We always try to keep sessions alive; this flag is only a preference.
+                st.session_state.setdefault("remember_me", True)
+                st.toggle(
+                    "Remember me (stay signed in)",
+                    key="remember_me",
+                    value=st.session_state.get("remember_me", True),
+                    help="We’ll try to keep your session active so you don’t have to sign in again.",
+                )
 
                 if st.button("Sign in", use_container_width=True, key="acct_signin"):
                     try:
                         sign_in(em_in, pw_in)
-                        # If remember_me is on, we rely on Supabase to keep the session valid.
-                        # (No password or token is stored by this app.)
                         st.rerun()
                     except Exception as e:
                         st.error(f"Sign in failed: {e}")
@@ -1314,26 +1308,31 @@ with status_col3:
                         except Exception as e:
                             st.error(f"Sign up failed: {e}")
 
-
+# ---- Appearance + Settings ----
+with status_col3:
     with st.expander("Appearance", expanded=False):
         render_appearance_controls()
+
     with st.expander("Settings", expanded=False):
+        # Answer language
         st.session_state.answer_lang = st.selectbox(
-    "Answer language",
-    ["English", "Arabic"],
-    index=["English", "Arabic"].index(st.session_state.answer_lang),
-    on_change=queue_autosave,
-    key="answer_lang_select",
-)
-# [ANCHOR: AUTOSAVE_LANG]
+            "Answer language",
+            ["English", "Arabic"],
+            index=["English", "Arabic"].index(st.session_state.answer_lang),
+            on_change=queue_autosave,
+            key="answer_lang_select",
+        )
+
+        # Debug toggle
         st.session_state.debug = st.toggle(
-    "Debug (show internal details)",
-    value=st.session_state.debug,
-    help="For developers: shows retrieved context, timings, and extra logs.",
-    on_change=queue_autosave,
-    key="debug_toggle",
-)
-# [ANCHOR: AUTOSAVE_DEBUG]
+            "Debug (show internal details)",
+            value=st.session_state.debug,
+            help="For developers: shows retrieved context, timings, and extra logs.",
+            on_change=queue_autosave,
+            key="debug_toggle",
+        )
+
+        # College filter
         try:
             colleges = sorted(list(KNOWN_COLLEGES))
         except Exception:
@@ -1343,27 +1342,38 @@ with status_col3:
             _idx = options.index(st.session_state.college_filter)
         except ValueError:
             _idx = 0
-        st.session_state.college_filter = st.selectbox("College filter", options, index=_idx,on_change=queue_autosave)
+        st.session_state.college_filter = st.selectbox(
+            "College filter",
+            options,
+            index=_idx,
+            on_change=queue_autosave,
+            key="college_filter_select",
+        )
+
+        # Mobile mode
         st.session_state.setdefault("mobile_mode", False)
-    st.session_state.mobile_mode = st.toggle(
-    "Mobile-friendly controls", value=st.session_state.mobile_mode, help="Use sliders/radios/pills instead of inputs on phones.",on_change=queue_autosave,key="mobile_mode_toggle",
-    )
-    
+        st.session_state.mobile_mode = st.toggle(
+            "Mobile-friendly controls",
+            value=st.session_state.mobile_mode,
+            help="Use sliders/radios/pills instead of inputs on phones.",
+            on_change=queue_autosave,
+            key="mobile_mode_toggle",
+        )
 
-    cols_hdr = st.columns(2)
-    with cols_hdr[0]:
-        if st.button("Open Schedule Builder" if not st.session_state.show_schedule else "Close Schedule Builder"):
-            st.session_state.show_schedule = not st.session_state.show_schedule
-            st.rerun()
-    with cols_hdr[1]:
-        clear_clicked = st.button("Clear chat")
+# ---- Schedule + Clear chat ----
+cols_hdr = st.columns(2)
+with cols_hdr[0]:
+    if st.button("Open Schedule Builder" if not st.session_state.show_schedule else "Close Schedule Builder"):
+        st.session_state.show_schedule = not st.session_state.show_schedule
+        st.rerun()
+with cols_hdr[1]:
+    clear_clicked = st.button("Clear chat")
 
-    exists = os.path.exists(CSV_PATH)
-    st.caption(f"CSV: {'found' if exists else 'missing'}")
+exists = os.path.exists(CSV_PATH)
+st.caption(f"CSV: {'found' if exists else 'missing'}")
 
 with status_col1:
     st.caption("BETA — AUIBPT (Ryunix Build)")
-
 
 # ---------------------- Load index / catalog ----------------------
 try:

@@ -9,6 +9,6 @@ INDEX_DIR = "vs_courses"     # FAISS index folder
 # Output behavior
 TOP_K = 3
 TEMPERATURE = 0.1
-NUM_PREDICT = 192            # used as max_tokens for OpenAI
+NUM_PREDICT = 4096
 
 USE_GROQ_ONLY = True

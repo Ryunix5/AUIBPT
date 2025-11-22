@@ -111,7 +111,7 @@ def _clean_output(text: str) -> str:
     if not text:
         return "I don't know from the provided data."
 
-    # 1) Extract last <final>...</final> block if present
+    #  Extract last <final>...</final> block if present
     finals = re.findall(r"<final>(.*?)</final>", text, flags=re.DOTALL | re.IGNORECASE)
     if finals:
         text = next((blk.strip() for blk in reversed(finals) if blk.strip()), finals[-1].strip())
@@ -120,12 +120,12 @@ def _clean_output(text: str) -> str:
         if m_open:
             text = m_open.group(1).strip()
 
-    # 2) Remove hidden chain-of-thought and any residual tags, but DO NOT collapse whitespace
+    
     text = re.sub(r"<think\b[^>]*>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r"</?think\b[^>]*>", "", text, flags=re.IGNORECASE)
     text = re.sub(r"</?final\b[^>]*>", "", text, flags=re.IGNORECASE)
 
-    # 3) DO NOT nuke markdown; just normalize newlines a bit
+    
     # - convert CRLF to LF
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     # - trim trailing spaces on each line
@@ -133,12 +133,8 @@ def _clean_output(text: str) -> str:
     # - collapse 3+ blank lines to max 2 (keeps paragraphs & lists readable)
     text = re.sub(r"\n{3,}", "\n\n", text)
 
-    # 4) Light safety: if bullets got stuck inline like '- point1 - point2', fix common case
-    # (only when there are no real newlines between dashes)
-    if " - " in text and "\n- " not in text:
-        text = text.replace(" - ", "\n- ")
 
-    # 5) Remove overly aggressive scrub that could eat content (e.g., lines starting "rules:")
+    # 4) Remove overly aggressive scrub that could eat content (e.g., lines starting "rules:")
     # (We previously stripped anything after 'rules:'; that's gone now.)
 
     text = text.strip()

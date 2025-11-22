@@ -1374,6 +1374,7 @@ st.caption(f"CSV: {'found' if exists else 'missing'}")
 
 with status_col1:
     st.caption("BETA — AUIBPT (Ryunix Build)")
+    st.write("DEBUG uid =", uid)
 
 # ---------------------- Load index / catalog ----------------------
 try:

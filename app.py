@@ -278,23 +278,14 @@ def _pg_exec(qb):
 
 # ---------- Autosave utilities ----------
 def _auth_user():
-    """Return (uid, email) if signed in, else (None, None)."""
-    user = st.session_state.get("_auth_user")
-    if isinstance(user, dict) and user.get("id"):
-        return user["id"], user.get("email")
     try:
-        if sb and hasattr(sb, "auth") and hasattr(sb.auth, "get_user"):
-            resp = sb.auth.get_user()
-            u = getattr(resp, "user", None)
-            if u:
-                uid = getattr(u, "id", None)
-                em  = getattr(u, "email", None)
-                if uid:
-                    st.session_state["_auth_user"] = {"id": uid, "email": em}
-                    return uid, em
+        resp = sb.auth.get_user()
+        if resp and resp.user:
+            return resp.user.id, resp.user.email
+        return None, None
     except Exception:
-        pass
-    return None, None
+        return None, None
+
 
 def queue_autosave():
     st.session_state["_autosave_needed"] = True
@@ -478,12 +469,8 @@ def current_user():
     # Ask Supabase
     try:
         if sb and hasattr(sb, "auth") and hasattr(sb.auth, "get_user"):
-            resp = sb.auth.get_user()
-            supa_user = getattr(resp, "user", None)
-            if supa_user:
-                uid = getattr(supa_user, "id", None)
-                em  = getattr(supa_user, "email", None)
-                if uid:
+            uid, email = _auth_user()
+            if uid:
                     st.session_state["_auth_user"] = {"id": uid, "email": em}
                     return uid, em
     except Exception:

@@ -512,7 +512,7 @@ def ensure_current_chat():
             st.session_state["current_chat_id"] = data[0]["id"]
             return
         # Create a first chat if none exist
-        ins = sb.table("chats").insert({"user_id": uid, "title": "New chat"}).execute()
+        ins = sb.table("chats").insert({"title": "New chat"}).execute()
         d = getattr(ins, "data", ins) or []
         if isinstance(d, list) and d:
             st.session_state["current_chat_id"] = d[0]["id"]
@@ -566,12 +566,15 @@ def render_chats_ui(prefix: str = "hdr_chats"):
     with c2:
         if st.button("Create chat", use_container_width=True, key=f"{prefix}_create"):
             try:
-                chat_id = create_chat(uid, new_title.strip() or "New chat")
-                st.session_state.current_chat_id = chat_id
-                st.session_state.messages = []
+                ins = sb.table("chats").insert({"title": (new_title or 'New chat').strip()}).execute()
+                d = getattr(ins, "data", ins) or []
+                if isinstance(d, list) and d:
+                    st.session_state["current_chat_id"] = d[0]["id"]
+                    st.session_state["messages"] = []
                 st.rerun()
             except Exception as exc:
                 st.error(f"Create failed: {exc}")
+
 
     if chat_rows:
         titles = [row.get("title") or "(untitled)" for row in chat_rows]
@@ -1374,7 +1377,7 @@ st.caption(f"CSV: {'found' if exists else 'missing'}")
 
 with status_col1:
     st.caption("BETA — AUIBPT (Ryunix Build)")
-    st.write("DEBUG uid =", uid)
+    
 
 # ---------------------- Load index / catalog ----------------------
 try:

@@ -13,6 +13,8 @@ from ui import apply_theme, render_appearance_controls
 from data_io import build_or_load_index
 from ui import apply_theme, render_appearance_controls
 
+
+
 # ---------------------- Settings (safe fallbacks) ----------------------
 try:
     from settings import MODEL_NAME, CSV_PATH, INDEX_DIR, TOP_K, TEMPERATURE, NUM_PREDICT, USE_OPENAI
@@ -746,6 +748,57 @@ if "theme_primary" not in st.session_state: st.session_state.theme_primary = "#4
 if "theme_bg" not in st.session_state:      st.session_state.theme_bg = "#000000"
 if "theme_text" not in st.session_state:    st.session_state.theme_text = "#e2e8f0"
 apply_theme(st.session_state.theme_primary, st.session_state.theme_bg, st.session_state.theme_text)
+# ---------------------- Simple One-Time Intro ----------------------
+if "intro_done" not in st.session_state:
+    st.session_state.intro_done = False
+
+if not st.session_state.intro_done:
+    st.session_state.intro_done = True  # mark immediately
+
+    st.markdown("""
+        <style>
+        /* Fullscreen overlay */
+        .rp_intro_container {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* OPAQUE overlay so GUI is not visible */
+            background: radial-gradient(circle at center, rgba(15,15,20,0.96) 0%, rgba(0,0,0,1) 70%);
+            z-index: 9999;
+            pointer-events: none; /* doesn't block clicks, but you can't see anything anyway */
+            animation: rp_fadeout 2.4s ease-out forwards;
+        }
+
+        .rp_intro_text {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 0px 0px 18px rgba(0,0,0,0.7);
+            opacity: 0;
+            animation: rp_fadein 1.2s ease-out forwards;
+        }
+
+        @keyframes rp_fadein {
+            0%   { opacity: 0;   transform: translateY(8px); }
+            50%  { opacity: 1;   transform: translateY(0); }
+            100% { opacity: 1; }
+        }
+
+        @keyframes rp_fadeout {
+            0%   { opacity: 1; }
+            70%  { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        </style>
+
+        <div class="rp_intro_container">
+            <div class="rp_intro_text">Ryunix Productions</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ---------------------- Logging ----------------------
 logging.basicConfig(filename="app.log", level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -1283,8 +1336,8 @@ with status_col3:
             # If NOT signed in: show login form
             else:
                 st.caption("Sign in to save chats & settings.")
-                em_in = st.text_input("Email", key="auth_email_hdr")
-                pw_in = st.text_input("Password", type="password", key="auth_pw_hdr")
+                em_in = st.text_input("Email", key="auth_email_hdr_chats")
+                pw_in = st.text_input("Password", type="password", key="auth_pw_hdr_chats")
 
                 # We always try to keep sessions alive; this flag is only a preference.
                 st.session_state.setdefault("remember_me", True)
@@ -1292,10 +1345,10 @@ with status_col3:
                     "Remember me (stay signed in)",
                     key="remember_me",
                     value=st.session_state.get("remember_me", True),
-                    help="We’ll try to keep your session active so you don’t have to sign in again.",
+                    help="We’ll try to keep your session     active so you don’t have to sign in again.",
                 )
 
-                if st.button("Sign in", use_container_width=True, key="acct_signin"):
+                if st.button("Sign in", use_container_width=True, key="acct_signin_chats"):
                     try:
                         sign_in(em_in, pw_in)
                         st.rerun()
@@ -1303,9 +1356,9 @@ with status_col3:
                         st.error(f"Sign in failed: {e}")
 
                 with st.expander("Create account"):
-                    new_em = st.text_input("Email (new)", key="auth_email_new_hdr")
-                    new_pw = st.text_input("Password (new)", type="password", key="auth_pw_new_hdr")
-                    if st.button("Create account", use_container_width=True, key="hdr_create_acct"):
+                    new_em = st.text_input("Email (new)", key="auth_email_new_hdr_chats")
+                    new_pw = st.text_input("Password (new)", type="password", key="auth_pw_new_hdr_chats")
+                    if st.button("Create account", use_container_width=True, key="hdr_create_acct_chats"):
                         try:
                             sign_up(new_em, new_pw)
                         except Exception as e:

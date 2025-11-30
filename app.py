@@ -1478,6 +1478,74 @@ LA_CATEGORY = {
 LA_QUANT_BOTH = {"CSC101","MAT101"}
 MAJOR_WEIGHT, LA_WEIGHT = 3, 1
 DIFFICULTY_WEIGHT_MAP = {"Easy":(2.0,1.0),"Medium":(3.0,1.0),"Hard":(4.0,1.0)}
+# ---------------------- CS Major Electives (Tracks) ----------------------
+CS_MAJOR_ELECTIVE_LIMIT = 4
+
+CS_ELECTIVE_TRACKS = {
+    "Data Science Track": [
+        "CSC333",  # Machine Learning
+        "CSC335",  # Pattern Recognition
+        "CSC336",  # Data Mining
+        "CSC465",  # Parallel and Distributed Computing
+    ],
+    "Artificial & Computational Intelligence Track": [
+        "CSC333",  # Machine Learning
+        "CSC335",  # Pattern Recognition
+        "CSC334",  # Introduction to Computational Intelligence
+        "CSC454",  # Deep Learning
+    ],
+    "Bioinformatics Track": [
+        "CSC444",  # Computer Vision
+        "CSC333",  # Machine Learning
+        "CSC446",  # Introduction to Bioinformatics
+        "CSC447",  # Computational Method in Bioinformatics
+    ],
+    "Mobile/Web/Cyber Track": [
+        "CSC235",  # Programming in Visual C# for .NET
+        "CSC310",  # Open-Source Web Technologies and Web Design
+        "CSC311",  # Mobile Application Programming
+        "CSC421",  # Cloud Computing
+    ],
+     "General": {
+        "CSC232",  # C++ for Programmers
+        "CSC233",  # Python Programming
+        "CSC312",  # ASP.NET Web Programming
+        "CSC344",  # Statistical Methods for Data Scientists
+        "CSC348",  # Scalable Data System
+    },
+}
+
+
+# Flatten set of all elective course codes for CS
+CS_ELECTIVE_SET: Set[str] = {
+    code.upper()
+    for track_courses in CS_ELECTIVE_TRACKS.values()
+    for code in track_courses
+}
+
+def cs_major_elective_progress(
+    major_key: str,
+    taken_codes: Set[str],
+    planned_codes: Optional[Set[str]] = None,
+) -> Optional[Dict[str, int]]:
+    """
+    Compute how many CS major electives (from the defined tracks) are completed/planned.
+    Only applies when major_key == 'CS'.
+    """
+    if major_key != "CS":
+        return None
+
+    all_codes = {c.upper() for c in taken_codes}
+    if planned_codes:
+        all_codes |= {c.upper() for c in planned_codes}
+
+    done = len(all_codes & CS_ELECTIVE_SET)
+    remaining = max(0, CS_MAJOR_ELECTIVE_LIMIT - done)
+    return {
+        "limit": CS_MAJOR_ELECTIVE_LIMIT,
+        "done": done,
+        "remaining": remaining,
+    }
 
 def _parse_prereq_codes(prereq_text: str) -> List[str]:
     if not prereq_text: return []
@@ -1579,34 +1647,66 @@ def build_semester_schedule(
     used_codes: Set[str] = set(c.upper() for c in taken_codes)
     code_to_row = {r["code"].upper(): r for r in rows_all}
 
+    # --- NEW: count existing CS electives (already completed) ---
+    existing_cs_electives = 0
+    if major_key == "CS":
+        existing_cs_electives = len(used_codes & CS_ELECTIVE_SET)
+
+    # This will track electives we add in THIS planned schedule
+    planned_cs_electives = 0
+
     la_counts = la_completed_counts(used_codes)
     la_remain = la_remaining(la_counts, used_codes)
     la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
 
     la_flat: List[Tuple[str, Dict]] = []
     for cat, lst in la_pool_by_cat.items():
-        for r in lst: la_flat.append((cat, r))
+        for r in lst:
+            la_flat.append((cat, r))
 
     major_info = MAJOR_MAP[major_key]
     major_pool = _eligible_major_rows(used_codes, rows_all, major_info["prefixes"])
 
-    def cr_of(r: Dict) -> int: return _credits_from_str(r.get("credits"))
-    schedule: List[Dict] = []; cur_credits = 0
+    def cr_of(r: Dict) -> int:
+        return _credits_from_str(r.get("credits"))
+
+    schedule: List[Dict] = []
+    cur_credits = 0
 
     def try_add_row(r: Dict) -> bool:
-        nonlocal cur_credits
+        nonlocal cur_credits, planned_cs_electives
         cu = r["code"].upper()
-        if cu in used_codes: return False
-        reqs = _parse_prereq_codes(r.get("prereqs",""))
-        if any(rc not in used_codes for rc in reqs): return False
+
+        if cu in used_codes:
+            return False
+
+        # --- NEW: enforce CS major elective cap (4 total) ---
+        if major_key == "CS" and cu in CS_ELECTIVE_SET:
+            if existing_cs_electives + planned_cs_electives >= CS_MAJOR_ELECTIVE_LIMIT:
+                # We already reached the elective limit; skip this course
+                return False
+
+        reqs = _parse_prereq_codes(r.get("prereqs", ""))
+        if any(rc not in used_codes for rc in reqs):
+            return False
+
         c = cr_of(r)
-        if cur_credits + c > target_credits: return False
-        schedule.append(r); used_codes.add(cu); cur_credits += c
+        if cur_credits + c > target_credits:
+            return False
+
+        schedule.append(r)
+        used_codes.add(cu)
+        cur_credits += c
+
+        # If we successfully added a CS elective, increase planned count
+        if major_key == "CS" and cu in CS_ELECTIVE_SET:
+            planned_cs_electives += 1
+
         return True
 
     # Ensure Quantitative pair if missing
-    for q_code in ["CSC101","MAT101"]:
-        if la_remain.get("Quantitative",0) > 0 and q_code not in used_codes:
+    for q_code in ["CSC101", "MAT101"]:
+        if la_remain.get("Quantitative", 0) > 0 and q_code not in used_codes:
             rq = code_to_row.get(q_code)
             if rq and try_add_row(rq):
                 la_counts = la_completed_counts(used_codes)
@@ -1614,7 +1714,8 @@ def build_semester_schedule(
                 la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
                 la_flat = []
                 for cat, lst in la_pool_by_cat.items():
-                    for r in lst: la_flat.append((cat, r))
+                    for r in lst:
+                        la_flat.append((cat, r))
 
     # Decide goals
     if desired_major is not None or desired_la is not None:
@@ -1628,11 +1729,12 @@ def build_semester_schedule(
         desired_la = max(0, int(desired_la or 0))
     else:
         major_weight, la_weight = get_semester_weights(difficulty)
-        avg_cr = 3; total_slots = max(1, min(7, target_credits // avg_cr))
+        avg_cr = 3
+        total_slots = max(1, min(7, target_credits // avg_cr))
         if major_weight + la_weight <= 0:
             major_goal, la_goal = total_slots, 0
         else:
-            major_goal = round(total_slots * (major_weight/(major_weight+la_weight)))
+            major_goal = round(total_slots * (major_weight / (major_weight + la_weight)))
             la_goal = total_slots - major_goal
         desired_major, desired_la = max(0, major_goal), max(0, la_goal)
 
@@ -1642,55 +1744,80 @@ def build_semester_schedule(
     guard, MAX_ITERS = 0, 1000
     while cur_credits < target_credits and guard < MAX_ITERS:
         guard += 1
-        major_pool = [r for r in _eligible_major_rows(used_codes, rows_all, major_info["prefixes"])
-                      if r["code"].upper() not in used_codes]
+        major_pool = [
+            r
+            for r in _eligible_major_rows(used_codes, rows_all, major_info["prefixes"])
+            if r["code"].upper() not in used_codes
+        ]
 
         la_counts = la_completed_counts(used_codes)
         la_remain = la_remaining(la_counts, used_codes)
         la_pool_by_cat = la_recommend_pool(used_codes, rows_all, la_remain)
-        la_flat = [(cat, r) for cat, lst in la_pool_by_cat.items() for r in lst if r["code"].upper() not in used_codes]
+        la_flat = [
+            (cat, r)
+            for cat, lst in la_pool_by_cat.items()
+            for r in lst
+            if r["code"].upper() not in used_codes
+        ]
         la_any_available = bool(la_flat)
 
         picked = False
 
         def pick_major_first() -> bool:
             if major_remaining > 0 and la_remaining_goal > 0:
-                if any(v > 0 for v in la_remain.values()): return False
+                if any(v > 0 for v in la_remain.values()):
+                    return False
                 return True
-            if major_remaining > 0: return True
-            if la_remaining_goal > 0: return False
+            if major_remaining > 0:
+                return True
+            if la_remaining_goal > 0:
+                return False
             return bool(major_pool)
 
         try_major = pick_major_first()
 
-        for bucket in (["major","la"] if try_major else ["la","major"]):
+        for bucket in (["major", "la"] if try_major else ["la", "major"]):
             if bucket == "major":
-                if major_remaining <= 0 or not major_pool: continue
+                if major_remaining <= 0 or not major_pool:
+                    continue
                 for r in major_pool:
                     if try_add_row(r):
-                        major_remaining -= 1; picked = True; break
-                if picked: break
+                        major_remaining -= 1
+                        picked = True
+                        break
+                if picked:
+                    break
             else:
-                if la_remaining_goal <= 0 or not la_any_available: continue
+                if la_remaining_goal <= 0 or not la_any_available:
+                    continue
                 for (cat, r) in la_flat:
-                    if la_remain.get(cat,0) <= 0 and any(v>0 for v in la_remain.values()):
+                    if la_remain.get(cat, 0) <= 0 and any(v > 0 for v in la_remain.values()):
                         continue
                     if try_add_row(r):
-                        la_remaining_goal -= 1; picked = True; break
-                if picked: break
+                        la_remaining_goal -= 1
+                        picked = True
+                        break
+                if picked:
+                    break
 
         if not picked:
             for r in major_pool:
-                if try_add_row(r): picked = True; break
+                if try_add_row(r):
+                    picked = True
+                    break
             if not picked:
                 for (cat, r) in la_flat:
-                    if try_add_row(r): picked = True; break
+                    if try_add_row(r):
+                        picked = True
+                        break
 
-        if not picked: break
+        if not picked:
+            break
         if major_remaining <= 0 and la_remaining_goal <= 0 and cur_credits >= target_credits - 2:
             break
 
     return schedule, la_counts, la_remain, cur_credits
+
 
 def _rebuild_pools(major_key: str, taken_codes: Set[str], rows_all: List[Dict]) -> Tuple[Dict[str, List[Dict]], List[Dict]]:
     la_counts = la_completed_counts(taken_codes)
@@ -1729,20 +1856,54 @@ def import_schedule_json(payload_bytes):
     return new_slots
 
 def _auto_top_up(major_key: str, target_credits: int, taken_codes: Set[str], slots: List[Dict], rows_all: List[Dict]) -> None:
-    def total(): return sum(_credits_from_str(s["candidates"][s["current_idx"]].get("credits")) for s in slots)
+    def total() -> int:
+        return sum(_credits_from_str(s["candidates"][s["current_idx"]].get("credits")) for s in slots)
+
     current_total = total()
-    if current_total >= target_credits: return
+    if current_total >= target_credits:
+        return
+
     used = set(taken_codes) | {s["candidates"][s["current_idx"]]["code"].upper() for s in slots}
     la_pool, major_pool = _rebuild_pools(major_key, used, rows_all)
     la_candidates = [r for pool in la_pool.values() for r in pool if r["code"].upper() not in used]
     major_candidates = [r for r in major_pool if r["code"].upper() not in used]
+
+    # --- NEW: elective limits for CS in auto-top-up ---
+    existing_cs_electives = 0
+    if major_key == "CS":
+        existing_cs_electives = len({c.upper() for c in taken_codes} & CS_ELECTIVE_SET)
+
     for origin, cand_list in [("LA:Any", la_candidates), ("Major", major_candidates)]:
         for r in cand_list:
+            cu = r["code"].upper()
+
+            # Enforce CS elective cap here as well
+            if major_key == "CS" and cu in CS_ELECTIVE_SET:
+                # Count electives already in current planned slots
+                planned_now = sum(
+                    1
+                    for s in slots
+                    if s["candidates"][s["current_idx"]]["code"].upper() in CS_ELECTIVE_SET
+                )
+                if existing_cs_electives + planned_now >= CS_MAJOR_ELECTIVE_LIMIT:
+                    continue  # skip this elective
+
             cr = _credits_from_str(r.get("credits"))
             if current_total + cr <= target_credits:
-                slots.append({"id": f"extra-{origin}-{len(slots)}","origin": origin,"candidates": [r],"current_idx": 0,"locked": False})
-                used.add(r["code"].upper()); current_total += cr
-                if current_total >= target_credits: return
+                slots.append(
+                    {
+                        "id": f"extra-{origin}-{len(slots)}",
+                        "origin": origin,
+                        "candidates": [r],
+                        "current_idx": 0,
+                        "locked": False,
+                    }
+                )
+                used.add(cu)
+                current_total += cr
+                if current_total >= target_credits:
+                    return
+
 
 def _toggle_lock(slot):
     slot["locked"] = not bool(slot.get("locked"))
@@ -1871,6 +2032,13 @@ def render_schedule_builder(rows_all, vs, bm25):
     completed_credits = _credits_completed(taken_codes_all, rows_all)
     degree_total = DEGREE_TOTAL.get(_major_key, 126)
     st.caption(f"Progress: {completed_credits} / {degree_total} credits • Target this term: {target_credits}")
+    # CS major electives progress (only for CS)
+    me_prog = cs_major_elective_progress(_major_key, taken_codes_all)
+    if me_prog is not None:
+        st.caption(
+            f"Major electives (CS) used: {me_prog['done']} / {me_prog['limit']} "
+            f"(remaining: {me_prog['remaining']})"
+        )
 
     # Action buttons
     col_build_a, col_build_b, col_build_c, col_build_d, col_build_e = st.columns([0.35,0.2,0.2,0.15,0.1])
